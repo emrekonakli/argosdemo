@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 780141969ced0fd4aa7b770acf32f95c, type: 3}
+  m_Name: NPC_KahinBilge
+  m_EditorClassIdentifier: Assembly-CSharp::Argos.NPC.NPCData
+  npcName: "K\xE2hin Bilge"
+  period: "M\xD6 800, Frigya"
+  personality: "Ya\u015Fl\u0131, s\xF6z\xFCn\xFC esirgemez ama do\u011Frudan cevap
+    vermekten ka\xE7\u0131nan bir k\xE2hin."
+  portrait: {fileID: 0}
+  knownFacts:
+  - "Tun\xE7 Kupa son kez tap\u0131nakta g\xF6r\xFCld\xFC."
+  - "Kupa sahibi yabanc\u0131 bir t\xFCccard\u0131."
+  - "O gece tap\u0131nakta \xFC\xE7 ki\u015Fi vard\u0131."
+  hiddenFacts:
+  - "T\xFCccar\u0131n o\u011Flu cinayet an\u0131nda oradayd\u0131."
+  - "Kupan\u0131n kenar\u0131ndaki kan t\xFCccara aitti."
+  mandatoryFinalFact: "T\xFCccar\u0131n o\u011Flu, babas\u0131n\u0131 kupayla zehirledi."
+  patienceCount: 6

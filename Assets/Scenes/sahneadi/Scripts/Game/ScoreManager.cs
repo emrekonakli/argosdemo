@@ -1,4 +1,5 @@
 using UnityEngine;
+using Argos.Player;
 
 namespace Argos.Game
 {
@@ -6,15 +7,15 @@ namespace Argos.Game
     {
         public static ScoreManager Instance { get; private set; }
 
-        public int EvidenceCount { get; set; }
-        public int WrongSuspectCount { get; set; }
-        public int RemainingPatience { get; set; }
+        // Sorgu sırasında InterrogationUI kalan ortalama sabırı buraya yazar
+        // (canlı bir yerde tutulmadığı için cached değer).
+        public int LastInterrogationRemainingPatience { get; set; }
 
         void Awake()
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
             Instance = this;
@@ -24,9 +25,15 @@ namespace Argos.Game
         public int CalculateScore()
         {
             const int baseScore = 1000;
-            int evidenceBonus = EvidenceCount * 50;
-            int wrongSuspectPenalty = WrongSuspectCount * 200;
-            int patienceBonus = RemainingPatience * 30;
+            int evidenceCount = PlayerInventory.Instance != null
+                ? PlayerInventory.Instance.Photos.Count + PlayerInventory.Instance.Notes.Count
+                : 0;
+            int wrongSuspectCount = GameManager.Instance != null
+                ? GameManager.Instance.WrongSuspectCount
+                : 0;
+            int evidenceBonus = evidenceCount * 50;
+            int wrongSuspectPenalty = wrongSuspectCount * 200;
+            int patienceBonus = LastInterrogationRemainingPatience * 30;
             return baseScore + evidenceBonus - wrongSuspectPenalty + patienceBonus;
         }
     }

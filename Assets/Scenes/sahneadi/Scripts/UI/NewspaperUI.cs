@@ -27,7 +27,7 @@ namespace Argos.UI
                 if (primaryButtonLabel != null) primaryButtonLabel.text = "DAVAYI ÜSTLEN";
                 if (secondaryButton != null) secondaryButton.gameObject.SetActive(false);
                 if (scoreLabel != null) scoreLabel.text = "";
-                BindPrimary(() => SceneManager.LoadScene("MuseumScene"));
+                BindPrimary(() => SceneManager.LoadScene(Scenes.Museum));
                 return;
             }
 
@@ -46,7 +46,7 @@ namespace Argos.UI
                 if (primaryButtonLabel != null) primaryButtonLabel.text = "TEKRAR DENE";
                 if (secondaryButtonLabel != null) secondaryButtonLabel.text = "ANA MENÜ";
             }
-            BindPrimary(() => { GameManager.Instance?.RestartScenario(); SceneManager.LoadScene("MuseumScene"); });
+            BindPrimary(() => { GameManager.Instance?.RestartScenario(); SceneManager.LoadScene(Scenes.Museum); });
         }
 
         void BindPrimary(System.Action callback)

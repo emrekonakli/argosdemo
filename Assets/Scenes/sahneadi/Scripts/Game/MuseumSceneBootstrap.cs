@@ -21,7 +21,9 @@ namespace Argos.Game
     {
         [Header("Build flags")]
         public bool buildOnStart = true;
-        public bool buildWalls = true;
+        // Faz 2'den itibaren duvar/zemin Tilemap'ten geliyor. Tilemap olmayan sahnede
+        // hızlı test için true yapılabilir.
+        public bool buildWalls = false;
 
         [Header("Optional refs")]
         public ArtifactData[] sampleArtifacts;
@@ -51,6 +53,7 @@ namespace Argos.Game
             BuildCamera();
             BuildCanvas();
             WireUp();
+            BuildArtifacts();
         }
 
         // ---------------------------------------------------------------
@@ -58,6 +61,15 @@ namespace Argos.Game
         // ---------------------------------------------------------------
         void BuildManagers()
         {
+            // Manager'lar DontDestroyOnLoad — sahne reload'da yaşıyorlar.
+            // Mevcut Instance varsa yeniden yaratma, sadece konfigürasyonu güncelle.
+            if (GameManager.Instance != null)
+            {
+                managersRoot = GameManager.Instance.gameObject;
+                if (scenario != null) GameManager.Instance.SetScenario(scenario);
+                return;
+            }
+
             managersRoot = new GameObject("Managers");
             managersRoot.AddComponent<GameManager>();
             managersRoot.AddComponent<QuestManager>();
@@ -65,6 +77,7 @@ namespace Argos.Game
             managersRoot.AddComponent<PortalManager>();
             var ai = managersRoot.AddComponent<AIManager>();
             var fb = managersRoot.AddComponent<FallbackResponseManager>();
+            managersRoot.AddComponent<AITester>(); // Faz 8 geçici — F tuşuyla AI test.
             if (aiConfig != null) ai.SetConfig(aiConfig);
             ai.SetFallback(fb);
             if (scenario != null) GameManager.Instance?.SetScenario(scenario);
@@ -116,6 +129,15 @@ namespace Argos.Game
         // ---------------------------------------------------------------
         void BuildPlayer()
         {
+            // PlayerInventory DDOL → Player GO sahne reload'da yaşıyor.
+            var existing = GameObject.FindGameObjectWithTag("Player");
+            if (existing != null)
+            {
+                player = existing;
+                player.transform.position = Vector3.zero;
+                return;
+            }
+
             player = new GameObject("Player");
             player.tag = "Player";
             player.transform.position = Vector3.zero;
@@ -133,7 +155,11 @@ namespace Argos.Game
             player.AddComponent<BoxCollider2D>();
             player.AddComponent<PlayerController>();
             player.AddComponent<PlayerInventory>();
-            player.AddComponent<PlayerGadget>();
+            var gadget = player.AddComponent<PlayerGadget>();
+            var audio = player.AddComponent<AudioSource>();
+            audio.playOnAwake = false;
+            audio.clip = null; // Faz 13'te ses placeholder eklenecek.
+            gadget.SetCameraSound(audio);
         }
 
         // ---------------------------------------------------------------
@@ -177,7 +203,12 @@ namespace Argos.Game
             BuildQuestBox(canvasGo.transform);
             BuildGadgetBanner(canvasGo.transform);
             BuildInteractPrompt(canvasGo.transform);
-            BuildFadeOverlay(canvasGo.transform);
+            BuildFlashOverlay(canvasGo.transform);
+            BuildArtifactInspectPanel(canvasGo.transform);
+            BuildJournalPanel(canvasGo.transform);
+            BuildJournalButton(canvasGo.transform);
+            BuildInternalVoicePanel(canvasGo.transform);
+            UIBuilders.BuildInterrogationPanel(canvasGo.transform);
 
             // UIManager singleton'ı Canvas üstüne ekleyelim (sahne-scoped).
             uiManager = canvasGo.AddComponent<UIManager>();
@@ -303,9 +334,11 @@ namespace Argos.Game
             root.SetActive(false);
         }
 
-        void BuildFadeOverlay(Transform parent)
+        private CanvasGroup flashOverlayGroup;
+
+        void BuildFlashOverlay(Transform parent)
         {
-            var go = new GameObject("FadeOverlay");
+            var go = new GameObject("FlashOverlay");
             go.transform.SetParent(parent, false);
             var rt = go.AddComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
@@ -313,11 +346,207 @@ namespace Argos.Game
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
             var img = go.AddComponent<Image>();
-            img.color = Color.black;
+            img.color = Color.white;
             var cg = go.AddComponent<CanvasGroup>();
             cg.alpha = 0f;
             cg.blocksRaycasts = false;
-            PortalManager.Instance?.SetFadeOverlay(cg);
+            flashOverlayGroup = cg;
+        }
+
+        void BuildArtifactInspectPanel(Transform parent)
+        {
+            var root = new GameObject("ArtifactInspectPanel");
+            root.transform.SetParent(parent, false);
+            var rt = root.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(640f, 480f);
+            var bg = root.AddComponent<Image>();
+            bg.color = new Color(0f, 0f, 0f, 0.88f);
+
+            var nameLbl = CreateText(root.transform, "Name", "", new Vector2(0, 200), new Vector2(600, 60), 32, TextAlignmentOptions.Center);
+            var periodLbl = CreateText(root.transform, "Period", "", new Vector2(0, 150), new Vector2(600, 30), 18, TextAlignmentOptions.Center);
+            periodLbl.color = new Color(0.75f, 0.75f, 0.75f);
+            var descLbl = CreateText(root.transform, "Description", "", new Vector2(0, 0), new Vector2(580, 220), 18, TextAlignmentOptions.TopLeft);
+
+            var photoBtn = CreateButton(root.transform, "PhotoBtn", "Fotoğraf Çek", new Vector2(-150, -200), new Vector2(220, 60));
+            var closeBtn = CreateButton(root.transform, "CloseBtn", "Kapat", new Vector2(150, -200), new Vector2(220, 60));
+
+            var inspect = root.AddComponent<ArtifactInspectUI>();
+            inspect.Setup(root, nameLbl, periodLbl, descLbl, photoBtn, closeBtn);
+            inspect.OnTakePhoto = (data) =>
+            {
+                if (player != null)
+                {
+                    var gadget = player.GetComponent<PlayerGadget>();
+                    if (gadget != null) gadget.TakePhoto(data);
+                }
+                inspect.Hide();
+            };
+            root.SetActive(false);
+        }
+
+        void BuildInternalVoicePanel(Transform parent)
+        {
+            var root = new GameObject("InternalVoicePanel");
+            root.transform.SetParent(parent, false);
+            var rt = root.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0f);
+            rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = new Vector2(0f, 110f);
+            rt.sizeDelta = new Vector2(700f, 140f);
+            var bg = root.AddComponent<Image>();
+            bg.color = new Color(0.18f, 0.14f, 0.1f, 0.92f);
+
+            // Karaca portresi (placeholder gri kare, solda)
+            var portrait = new GameObject("Portrait");
+            portrait.transform.SetParent(root.transform, false);
+            var prt = portrait.AddComponent<RectTransform>();
+            prt.anchorMin = new Vector2(0f, 0.5f);
+            prt.anchorMax = new Vector2(0f, 0.5f);
+            prt.pivot = new Vector2(0f, 0.5f);
+            prt.anchoredPosition = new Vector2(12f, 0f);
+            prt.sizeDelta = new Vector2(100f, 100f);
+            var pImg = portrait.AddComponent<Image>();
+            pImg.color = new Color(0.35f, 0.32f, 0.28f);
+
+            // Konuşma metni (sağda)
+            var labelGo = new GameObject("Text");
+            labelGo.transform.SetParent(root.transform, false);
+            var lrt = labelGo.AddComponent<RectTransform>();
+            lrt.anchorMin = new Vector2(0f, 0f);
+            lrt.anchorMax = new Vector2(1f, 1f);
+            lrt.offsetMin = new Vector2(128f, 12f);
+            lrt.offsetMax = new Vector2(-16f, -12f);
+            var tmp = labelGo.AddComponent<TextMeshProUGUI>();
+            tmp.text = "";
+            tmp.fontSize = 20;
+            tmp.alignment = TextAlignmentOptions.MidlineLeft;
+            tmp.color = new Color(0.95f, 0.92f, 0.84f);
+            tmp.textWrappingMode = TextWrappingModes.Normal;
+
+            var voice = root.AddComponent<InternalVoiceUI>();
+            voice.Setup(root, tmp);
+            root.SetActive(false);
+        }
+
+        void BuildJournalPanel(Transform parent)
+        {
+            var root = new GameObject("JournalPanel");
+            root.transform.SetParent(parent, false);
+            var rt = root.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(720f, 520f);
+            var bg = root.AddComponent<Image>();
+            bg.color = new Color(0.92f, 0.88f, 0.78f, 0.96f);
+
+            var header = CreateText(root.transform, "Header", "Defter", new Vector2(0, 220), new Vector2(680, 50), 28, TextAlignmentOptions.Center);
+            header.color = new Color(0.2f, 0.15f, 0.1f);
+
+            var contentGo = new GameObject("Content");
+            contentGo.transform.SetParent(root.transform, false);
+            var contentRt = contentGo.AddComponent<RectTransform>();
+            contentRt.anchorMin = new Vector2(0.5f, 0.5f);
+            contentRt.anchorMax = new Vector2(0.5f, 0.5f);
+            contentRt.pivot = new Vector2(0.5f, 1f);
+            contentRt.anchoredPosition = new Vector2(0f, 180f);
+            contentRt.sizeDelta = new Vector2(680f, 360f);
+            var vlg = contentGo.AddComponent<VerticalLayoutGroup>();
+            vlg.spacing = 8f;
+            vlg.padding = new RectOffset(8, 8, 8, 8);
+            vlg.childForceExpandHeight = false;
+            vlg.childForceExpandWidth = true;
+            vlg.childControlHeight = true;
+            vlg.childControlWidth = true;
+            vlg.childAlignment = TextAnchor.UpperLeft;
+
+            var closeBtn = CreateButton(root.transform, "CloseBtn", "Kapat", new Vector2(280, -220), new Vector2(140, 50));
+            closeBtn.onClick.AddListener(() => uiManager?.journal?.Hide());
+
+            var journal = root.AddComponent<JournalUI>();
+            journal.Setup(root, contentRt);
+            root.SetActive(false);
+        }
+
+        void BuildJournalButton(Transform parent)
+        {
+            var go = new GameObject("JournalButton");
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(1f, 0f);
+            rt.anchorMax = new Vector2(1f, 0f);
+            rt.pivot = new Vector2(1f, 0f);
+            rt.anchoredPosition = new Vector2(-20f, 20f);
+            rt.sizeDelta = new Vector2(140f, 60f);
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.55f, 0.4f, 0.25f, 0.9f);
+            var btn = go.AddComponent<Button>();
+            btn.onClick.AddListener(() => uiManager?.OpenJournal());
+
+            var lblGo = new GameObject("Label");
+            lblGo.transform.SetParent(go.transform, false);
+            var lrt = lblGo.AddComponent<RectTransform>();
+            lrt.anchorMin = Vector2.zero;
+            lrt.anchorMax = Vector2.one;
+            lrt.offsetMin = Vector2.zero;
+            lrt.offsetMax = Vector2.zero;
+            var ltmp = lblGo.AddComponent<TextMeshProUGUI>();
+            ltmp.text = "Defter";
+            ltmp.fontSize = 20;
+            ltmp.alignment = TextAlignmentOptions.Center;
+            ltmp.color = Color.white;
+        }
+
+        // ---------------------------------------------------------------
+        // Artifacts
+        // ---------------------------------------------------------------
+        void BuildArtifacts()
+        {
+            if (sampleArtifacts == null || sampleArtifacts.Length == 0) return;
+
+            Vector3[] positions =
+            {
+                new Vector3(-5f, 0f, 0f),
+                new Vector3(5f, 0f, 0f),
+                new Vector3(0f, 5f, 0f),
+            };
+
+            var root = new GameObject("Artifacts");
+            for (int i = 0; i < sampleArtifacts.Length && i < positions.Length; i++)
+            {
+                var data = sampleArtifacts[i];
+                if (data == null) continue;
+
+                var go = new GameObject("Artifact_" + (string.IsNullOrEmpty(data.artifactName) ? data.name : data.artifactName));
+                go.transform.SetParent(root.transform);
+                go.transform.position = positions[i];
+                go.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
+
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = MakeWhiteSprite();
+                sr.color = ArtifactColor(data);
+                sr.sortingOrder = 8;
+
+                var col = go.AddComponent<BoxCollider2D>();
+                col.isTrigger = true;
+                col.size = new Vector2(3f, 3f);
+
+                var interactable = go.AddComponent<ArtifactInteractable>();
+                interactable.data = data;
+            }
+        }
+
+        Color ArtifactColor(ArtifactData data)
+        {
+            if (data.isPortalTrigger) return new Color(0.75f, 0.45f, 0.9f);  // anomali rengi
+            if (data.isEvidenceTarget) return new Color(0.95f, 0.85f, 0.2f); // parlak sarı
+            return new Color(0.95f, 0.7f, 0.3f);                              // turuncu
         }
 
         // ---------------------------------------------------------------
@@ -330,9 +559,69 @@ namespace Argos.Game
                 uiManager.questBox = canvas.GetComponentInChildren<QuestBox>(true);
                 uiManager.gadgetWarning = canvas.GetComponentInChildren<GadgetWarningBanner>(true);
                 uiManager.interactPrompt = canvas.GetComponentInChildren<InteractPrompt>(true);
+                uiManager.artifactInspect = canvas.GetComponentInChildren<ArtifactInspectUI>(true);
+                uiManager.journal = canvas.GetComponentInChildren<JournalUI>(true);
+                uiManager.internalVoice = canvas.GetComponentInChildren<InternalVoiceUI>(true);
+                uiManager.interrogation = canvas.GetComponentInChildren<InterrogationUI>(true);
             }
             if (QuestManager.Instance != null && uiManager != null && uiManager.questBox != null)
                 QuestManager.Instance.SetQuestBox(uiManager.questBox);
+
+            if (player != null && flashOverlayGroup != null)
+            {
+                var gadget = player.GetComponent<PlayerGadget>();
+                if (gadget != null) gadget.SetFlashOverlay(flashOverlayGroup);
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // UI element helpers
+        // ---------------------------------------------------------------
+        static TMP_Text CreateText(Transform parent, string name, string text, Vector2 anchoredPos, Vector2 size, float fontSize, TextAlignmentOptions align)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = anchoredPos;
+            rt.sizeDelta = size;
+            var tmp = go.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = fontSize;
+            tmp.alignment = align;
+            tmp.color = Color.white;
+            return tmp;
+        }
+
+        static Button CreateButton(Transform parent, string name, string label, Vector2 anchoredPos, Vector2 size)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = anchoredPos;
+            rt.sizeDelta = size;
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.3f, 0.4f, 0.7f, 0.85f);
+            var btn = go.AddComponent<Button>();
+
+            var labelGo = new GameObject("Label");
+            labelGo.transform.SetParent(go.transform, false);
+            var lrt = labelGo.AddComponent<RectTransform>();
+            lrt.anchorMin = Vector2.zero;
+            lrt.anchorMax = Vector2.one;
+            lrt.offsetMin = Vector2.zero;
+            lrt.offsetMax = Vector2.zero;
+            var ltmp = labelGo.AddComponent<TextMeshProUGUI>();
+            ltmp.text = label;
+            ltmp.fontSize = 20;
+            ltmp.alignment = TextAlignmentOptions.Center;
+            ltmp.color = Color.white;
+            return btn;
         }
 
         // ---------------------------------------------------------------

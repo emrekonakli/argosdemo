@@ -27,7 +27,7 @@ namespace Argos.Game
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
             Instance = this;
@@ -39,13 +39,16 @@ namespace Argos.Game
             UpdateQuestBox();
         }
 
-        public void AdvanceQuest()
+        /// <summary>
+        /// Çağrılan adımda bulunuyorsak sonraki adıma geç. Birden fazla yerden
+        /// güvenle çağrılabilir (örn. aynı esere ikinci kez E basılırsa zarar yok).
+        /// </summary>
+        public void TryAdvance(int fromIndex)
         {
-            if (CurrentQuestIndex < questTexts.Length - 1)
-            {
-                CurrentQuestIndex++;
-                UpdateQuestBox();
-            }
+            if (CurrentQuestIndex != fromIndex) return;
+            if (CurrentQuestIndex >= questTexts.Length - 1) return;
+            CurrentQuestIndex++;
+            UpdateQuestBox();
         }
 
         public void UpdateQuestBox()

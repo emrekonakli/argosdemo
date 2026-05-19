@@ -8,21 +8,21 @@ namespace Argos.UI
     {
         public static UIManager Instance { get; private set; }
 
-        [SerializeField] public ArtifactInspectUI artifactInspect;
-        [SerializeField] public JournalUI journal;
-        [SerializeField] public InternalVoiceUI internalVoice;
-        [SerializeField] public InterrogationUI interrogation;
-        [SerializeField] public NewspaperUI newspaper;
-        [SerializeField] public SuspectSelectionUI suspectSelection;
-        [SerializeField] public QuestBox questBox;
-        [SerializeField] public GadgetWarningBanner gadgetWarning;
-        [SerializeField] public InteractPrompt interactPrompt;
+        public ArtifactInspectUI artifactInspect;
+        public JournalUI journal;
+        public InternalVoiceUI internalVoice;
+        public InterrogationUI interrogation;
+        public NewspaperUI newspaper;
+        public SuspectSelectionUI suspectSelection;
+        public QuestBox questBox;
+        public GadgetWarningBanner gadgetWarning;
+        public InteractPrompt interactPrompt;
 
         void Awake()
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
             Instance = this;
@@ -88,6 +88,8 @@ namespace Argos.UI
             if (journal != null) journal.Hide();
             if (interrogation != null) interrogation.Hide();
             if (suspectSelection != null) suspectSelection.Hide();
+            if (newspaper != null) newspaper.Hide();
+            if (internalVoice != null) internalVoice.Close();
         }
     }
 }

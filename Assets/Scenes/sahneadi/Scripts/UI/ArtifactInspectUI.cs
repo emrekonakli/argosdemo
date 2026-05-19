@@ -18,8 +18,14 @@ namespace Argos.UI
 
         public System.Action<ArtifactData> OnTakePhoto;
 
-        void Awake()
+        public void Setup(GameObject rootObj, TMP_Text nameField, TMP_Text periodField, TMP_Text descField, Button photoBtn, Button closeBtn)
         {
+            root = rootObj;
+            nameLabel = nameField;
+            periodOriginLabel = periodField;
+            descriptionLabel = descField;
+            photoButton = photoBtn;
+            closeButton = closeBtn;
             if (closeButton != null) closeButton.onClick.AddListener(Hide);
             if (photoButton != null) photoButton.onClick.AddListener(() => OnTakePhoto?.Invoke(CurrentData));
         }

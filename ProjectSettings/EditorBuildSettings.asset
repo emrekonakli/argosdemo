@@ -6,6 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/sahneadi/Scenes/MuseumScene.unity
+    guid: ecd78ebcd0996df4d9afe1c16cc1bb93
+  - enabled: 1
+    path: Assets/Scenes/sahneadi/Scenes/PortalScene.unity
+    guid: 0caee73e0216d474c9ea90effb1cd4d6
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   m_configObjects:

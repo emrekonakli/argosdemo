@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using Argos.Artifacts;
 using Argos.Scenarios;
 using Argos.NPC;
 
@@ -14,11 +16,13 @@ namespace Argos.Game
         public int WrongSuspectCount { get; private set; }
         public bool CaseSolved { get; private set; }
 
+        private readonly HashSet<ArtifactData> usedPortals = new HashSet<ArtifactData>();
+
         void Awake()
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
             Instance = this;
@@ -43,6 +47,17 @@ namespace Argos.Game
         {
             WrongSuspectCount = 0;
             CaseSolved = false;
+            usedPortals.Clear();
+        }
+
+        public void MarkPortalUsed(ArtifactData artifact)
+        {
+            if (artifact != null) usedPortals.Add(artifact);
+        }
+
+        public bool IsPortalUsed(ArtifactData artifact)
+        {
+            return artifact != null && usedPortals.Contains(artifact);
         }
     }
 }

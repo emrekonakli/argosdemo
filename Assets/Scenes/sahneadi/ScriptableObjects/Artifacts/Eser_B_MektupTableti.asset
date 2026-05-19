@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddf88999c270a2649879dea4d235d217, type: 3}
+  m_Name: Eser_B_MektupTableti
+  m_EditorClassIdentifier: Assembly-CSharp::Argos.Artifacts.ArtifactData
+  artifactName: Antik Mektup Tableti
+  artifactDescription: "\xC7ivi yaz\u0131s\u0131yla yaz\u0131lm\u0131\u015F bir mektup
+    par\xE7as\u0131. Kenar\u0131 k\u0131r\u0131k, ama m\xFCh\xFCr izi h\xE2l\xE2
+    okunabiliyor. \xDCzerinde belirgin bir kan lekesi var \u2014 son sahibinden kalm\u0131\u015F
+    olabilir."
+  artifactPeriod: "M\xD6 1200"
+  artifactOrigin: "Bo\u011Fazk\xF6y"
+  artifactSprite: {fileID: 0}
+  artifact3DModel: {fileID: 0}
+  isEvidenceTarget: 1
+  isPortalTrigger: 0
+  internalVoiceLine: 

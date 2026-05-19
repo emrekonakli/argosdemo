@@ -49,14 +49,14 @@ LEGEND: [✓] DONE   [~] IN PROGRESS   [ ] TODO   [!] BLOCKED
 
   [✓] FAZ 0  — Proje iskelet + script altyapısı
   [✓] FAZ 1  — PlayerController + WASD görsel joystick + kamera
-  [ ] FAZ 2  — Museum sahnesi: Tilemap zemin/duvar/mobilya
-  [ ] FAZ 3  — Artifact sistemi: ScriptableObject asset'leri + Inspect paneli
-  [ ] FAZ 4  — PlayerInventory + Gadget fotoğraf akışı
-  [ ] FAZ 5  — InternalVoice paneli + otomatik EvidenceNote
-  [ ] FAZ 6  — QuestManager + QuestBox akışı (4 adımlık)
-  [ ] FAZ 7  — Portal sistemi: animasyon, PortalScene, geri dönüş
-  [ ] FAZ 8  — AIConfig.asset + AIManager testi (API key opsiyonel)
-  [ ] FAZ 9  — InterrogationPanel: sabır barı, sohbet, kanıt gösterme
+  [✓] FAZ 2  — Museum sahnesi: Tilemap zemin/duvar/mobilya
+  [✓] FAZ 3  — Artifact sistemi: ScriptableObject asset'leri + Inspect paneli
+  [✓] FAZ 4  — PlayerInventory + Gadget fotoğraf akışı
+  [✓] FAZ 5  — InternalVoice paneli + otomatik EvidenceNote
+  [✓] FAZ 6  — QuestManager + QuestBox akışı (4 adımlık)
+  [✓] FAZ 7  — Portal sistemi: animasyon, PortalScene, geri dönüş
+  [✓] FAZ 8  — AIConfig.asset + AIManager testi (API key opsiyonel)
+  [~] FAZ 9  — InterrogationPanel: sabır barı, sohbet, kanıt gösterme
   [ ] FAZ 10 — Suçlu seçimi: Dava Panosu + SuspectSelectionPanel
   [ ] FAZ 11 — NewspaperScene: giriş ve iki varyant çıkış
   [ ] FAZ 12 — ScoreManager hesaplama + sona erme ekranı
@@ -143,38 +143,58 @@ TEST SONUCU:
   - Halid 2026-05-19 "her şey okey" onayı verdi.
 
 ================================================================================
-FAZ 2 — MUSEUM TILEMAP (ZEMİN / DUVAR / MOBİLYA)                  [ TODO]
+FAZ 2 — MUSEUM TILEMAP (ZEMİN / DUVAR / MOBİLYA)                  [✓ DONE]
 ================================================================================
 
 AMAÇ: Tasarım dokümanı Bölüm 3.1 — gerçek Tilemap sistemini kullan.
-20x15 oda, 32x32 px tile.
+20x15 oda, 32x32 px tile, 1 tile = 1 Unity birimi.
 
-ŞU AN: MuseumSceneBootstrap, duvarları SpriteRenderer + BoxCollider2D olarak
-runtime'da yapıyor. Tilemap yok.
+YAPILANLAR (2026-05-19):
+  - Assets/Scenes/sahneadi/Editor/MuseumTilemapBuilder.cs yazıldı:
+    [MenuItem "ARGOS/Build Museum Tilemap"] ile tek tıkla tüm Tilemap kurulumu.
+    Sprite PNG'leri yaratır (32x32, point filter, PPU=32), Tile asset'lerini
+    kurar, sahnede Grid + 3 Tilemap (Floor, Walls, Furniture) oluşturur,
+    duvar tile'larını border'a yerleştirir, 4 mobilya tile'ı serpiştirir,
+    Walls'a TilemapCollider2D + Rigidbody2D(Static) + CompositeCollider2D
+    ekler, Furniture'a TilemapCollider2D ekler.
+  - Builder ayrıca sahnedeki MuseumSceneBootstrap component'inin buildWalls
+    field'ını false yapıp save eder.
+  - MuseumSceneBootstrap default buildWalls=false yapıldı (Tilemap olmayan
+    sahnede hızlı test isteyen için true yapılabilir).
 
-YAPILACAKLAR:
-  - [ ] Assets/Sprites/Placeholders/ altına basit Tile asset'leri oluştur:
-        floor_light.tile, wall_dark.tile, furniture_brown.tile (Unity'nin
-        TilePalette'inden veya kod ile).
-  - [ ] Bir TilePalette oluştur (Window > 2D > Tile Palette).
-  - [ ] MuseumScene'e Grid + 3 Tilemap (Floor, Walls, Furniture) ekle.
-  - [ ] Walls Tilemap'ine TilemapCollider2D + CompositeCollider2D ekle.
-  - [ ] MuseumSceneBootstrap'ten BuildFloor + BuildWalls'ı kaldır
-        (veya buildOnStart=false yapacak alternatif).
-  - [ ] 20x15 odanın dış sınırlarına duvar tile'larını yerleştir.
-  - [ ] Birkaç vitrin/mobilya tile'ı ekle (3-4 adet).
+YAPILACAKLAR (Halid):
+  - [ ] Unity Console'da yeni Editor script derlemesi yeşil mi kontrol et.
+  - [ ] Menü çubuğunda "ARGOS" > "Build Museum Tilemap" tıkla.
+  - [ ] Log'da "[ARGOS] Museum Tilemap built; scene + assets saved." görmelisin.
+  - [ ] Hierarchy'de "MuseumTilemap" parent altında Floor/Walls/Furniture
+        görünmeli.
+  - [ ] Play'e bas:
+        - Açık gri zemin görünür.
+        - Koyu duvarlar 20x15 odanın dışında.
+        - 4 kahverengi mobilya odanın iç köşelerinde.
+        - Karakter duvarlardan ve mobilyalardan geçemez.
 
 DENETLE:
-  - Karakter duvarlardan geçemiyor.
-  - Tilemap görünür, runtime'da SpriteRenderer duvarları görünmüyor.
-  - Kamera bounds Tilemap sınırlarına uygun.
+  - Çift Tilemap oluşturma hatası vermez (idempotent — tekrar çalıştırılırsa
+    eski "MuseumTilemap" silinir ve yenisi kurulur).
+  - Sahne save edilmiş halde — tekrar açıldığında Tilemap orada.
+
+EĞER FAİL OLURSA:
+  - "ARGOS" menüsü yoksa → Editor script derlenmemiş, Console'da hata olabilir.
+  - Player Tilemap üstünden geçiyor → CompositeCollider2D + Rigidbody2D(Static)
+    eksik veya wallCollider.compositeOperation Merge değil.
+  - Player odanın dışına çıkıyor → Camera bounds yine -10..10 ve -7.5..7.5,
+    Tilemap exactly bu alanı kaplıyor — eşleşmeli.
 
 NOTLAR:
-  - Bootstrap script'i artık sahnede önceden hazır Tilemap varsayacak.
-    BuildPlayer/Camera/Canvas/Managers tarafları kalsın.
+  - Tile renkleri: zemin (0.78, 0.78, 0.74), duvar (0.2, 0.2, 0.22),
+    mobilya (0.55, 0.4, 0.25). Gerçek pixel art Faz 13+.
+  - Sprite asset'leri PNG olarak Assets/Scenes/sahneadi/Sprites/Placeholders/
+    altına yazılır.
+  - Tile asset'leri Assets/Scenes/sahneadi/Tilemaps/Placeholders/ altına.
 
 ================================================================================
-FAZ 3 — ARTIFACT SİSTEMİ: ASSET'LER + INSPECT PANELİ              [ TODO]
+FAZ 3 — ARTIFACT SİSTEMİ: ASSET'LER + INSPECT PANELİ              [✓ DONE]
 ================================================================================
 
 AMAÇ: ArtifactData ScriptableObject asset'leri yarat, sahnede 3 eser instance
@@ -203,7 +223,7 @@ DENETLE:
     bağlanacak).
 
 ================================================================================
-FAZ 4 — PLAYERINVENTORY + GADGET FOTOĞRAF AKIŞI                   [ TODO]
+FAZ 4 — PLAYERINVENTORY + GADGET FOTOĞRAF AKIŞI                   [✓ DONE]
 ================================================================================
 
 AMAÇ: Fotoğraf çekilince PlayerInventory'ye EvidencePhoto eklensin, JournalUI'de
@@ -231,7 +251,7 @@ DENETLE:
   - Aynı eserden tekrar fotoğraf çekilebilir mi? (MVP'de evet, kontrol etmiyoruz.)
 
 ================================================================================
-FAZ 5 — INTERNAL VOICE PANELİ + OTOMATİK EVIDENCENOTE             [ TODO]
+FAZ 5 — INTERNAL VOICE PANELİ + OTOMATİK EVIDENCENOTE             [✓ DONE]
 ================================================================================
 
 AMAÇ: ArtifactData.internalVoiceLine dolu olan esere ilk yaklaşmada konuşma
@@ -253,7 +273,7 @@ DENETLE:
   - Tekrar incelendiğinde balon TEKRAR açılmaz (internalVoicePlayed bayrağı).
 
 ================================================================================
-FAZ 6 — QUESTMANAGER + QUESTBOX AKIŞI                             [ TODO]
+FAZ 6 — QUESTMANAGER + QUESTBOX AKIŞI                             [✓ DONE]
 ================================================================================
 
 AMAÇ: Tasarım dokümanı Bölüm 3.9 — 4 adımlık görev listesi otomatik akıyor.
@@ -276,7 +296,7 @@ DENETLE:
   - Sahne yüklenince adım 0 görünür.
 
 ================================================================================
-FAZ 7 — PORTAL SİSTEMİ: ANİMASYON + SAHNE GEÇİŞİ                  [ TODO]
+FAZ 7 — PORTAL SİSTEMİ: ANİMASYON + SAHNE GEÇİŞİ                  [✓ DONE]
 ================================================================================
 
 AMAÇ: Anomali tespiti → Portal Aç butonu → fade + (camera shake) → PortalScene
@@ -314,7 +334,7 @@ NOTLAR:
     veya ayrı bir banner button'ı.
 
 ================================================================================
-FAZ 8 — AICONFIG + AIMANAGER TESTİ                                [ TODO]
+FAZ 8 — AICONFIG + AIMANAGER TESTİ                                [✓ DONE]
 ================================================================================
 
 AMAÇ: Bir AIConfig.asset hazır olsun, API key boş olsa bile FallbackManager
