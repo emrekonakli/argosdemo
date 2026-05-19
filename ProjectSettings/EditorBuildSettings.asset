@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/sahneadi/Scenes/NewspaperScene.unity
+    guid: 2b0aef19f9206374d8f0012954e86d01
+  - enabled: 1
     path: Assets/Scenes/sahneadi/Scenes/MuseumScene.unity
     guid: ecd78ebcd0996df4d9afe1c16cc1bb93
   - enabled: 1

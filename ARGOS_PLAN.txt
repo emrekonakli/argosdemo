@@ -56,9 +56,9 @@ LEGEND: [✓] DONE   [~] IN PROGRESS   [ ] TODO   [!] BLOCKED
   [✓] FAZ 6  — QuestManager + QuestBox akışı (4 adımlık)
   [✓] FAZ 7  — Portal sistemi: animasyon, PortalScene, geri dönüş
   [✓] FAZ 8  — AIConfig.asset + AIManager testi (API key opsiyonel)
-  [~] FAZ 9  — InterrogationPanel: sabır barı, sohbet, kanıt gösterme
-  [ ] FAZ 10 — Suçlu seçimi: Dava Panosu + SuspectSelectionPanel
-  [ ] FAZ 11 — NewspaperScene: giriş ve iki varyant çıkış
+  [✓] FAZ 9  — InterrogationPanel: sabır barı, sohbet, kanıt gösterme
+  [✓] FAZ 10 — Suçlu seçimi: Dava Panosu + SuspectSelectionPanel
+  [✓] FAZ 11 — NewspaperScene: giriş ve iki varyant çıkış
   [ ] FAZ 12 — ScoreManager hesaplama + sona erme ekranı
   [ ] FAZ 13 — Polish: ses placeholder, fade'ler, edge case'ler
 
@@ -360,7 +360,7 @@ NOTLAR:
     set et.
 
 ================================================================================
-FAZ 9 — INTERROGATIONPANEL                                        [ TODO]
+FAZ 9 — INTERROGATIONPANEL                                        [✓ DONE]
 ================================================================================
 
 AMAÇ: NPC'ye yaklaş → [Konuş] → InterrogationUI açılır → sohbet, sabır barı,
@@ -389,7 +389,7 @@ DENETLE:
   - Sabır 0 olunca panel otomatik kapanır.
 
 ================================================================================
-FAZ 10 — SUÇLU SEÇİMİ + SUÇLU SORGUSU                             [ TODO]
+FAZ 10 — SUÇLU SEÇİMİ + SUÇLU SORGUSU                             [✓ DONE]
 ================================================================================
 
 AMAÇ: Tasarım dokümanı Bölüm 5.5 — Dava Panosu'na yaklaşıp şüpheli seç,
@@ -416,7 +416,7 @@ DENETLE:
     (Faz 11).
 
 ================================================================================
-FAZ 11 — NEWSPAPER SCENE: GİRİŞ + ÇIKIŞ                           [ TODO]
+FAZ 11 — NEWSPAPER SCENE: GİRİŞ + ÇIKIŞ                           [✓ DONE]
 ================================================================================
 
 AMAÇ: Tasarım dokümanı Bölüm 2 — gazete giriş/çıkış ekranları.

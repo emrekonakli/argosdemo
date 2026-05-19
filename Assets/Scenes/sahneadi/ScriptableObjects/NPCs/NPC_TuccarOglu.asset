@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 780141969ced0fd4aa7b770acf32f95c, type: 3}
+  m_Name: NPC_TuccarOglu
+  m_EditorClassIdentifier: Assembly-CSharp::Argos.NPC.NPCData
+  npcName: "T\xFCccar O\u011Flu Lyrios"
+  period: "M\xD6 800, Frigya"
+  personality: "Gen\xE7, sinirli, savunmac\u0131. Babas\u0131n\u0131n \xF6l\xFCm\xFCnden
+    sonra mirasa konmaya yeltenmi\u015F."
+  portrait: {fileID: 0}
+  knownFacts:
+  - "Babam o gece tap\u0131naktayd\u0131."
+  - "Kupay\u0131 ben de g\xF6rm\xFC\u015Ft\xFCm ama ona ben vermedim."
+  hiddenFacts:
+  - "Kupan\u0131n i\xE7ine zehir koyan bendim."
+  - "Babamla miras y\xFCz\xFCnden tart\u0131\u015Fm\u0131\u015Ft\u0131k."
+  - "Cinayet sonras\u0131 kupay\u0131 tap\u0131na\u011Fa geri b\u0131rakt\u0131m."
+  mandatoryFinalFact: "Babam\u0131 ben \xF6ld\xFCrd\xFCm. Kupay\u0131 zehirledim."
+  patienceCount: 8

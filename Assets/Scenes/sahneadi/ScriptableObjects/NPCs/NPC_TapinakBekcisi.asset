@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 780141969ced0fd4aa7b770acf32f95c, type: 3}
+  m_Name: NPC_TapinakBekcisi
+  m_EditorClassIdentifier: Assembly-CSharp::Argos.NPC.NPCData
+  npcName: "Tap\u0131nak Bek\xE7isi Aramis"
+  period: "M\xD6 800, Frigya"
+  personality: "G\xF6revine sad\u0131k, ama o gece n\xF6bette uyuklad\u0131\u011F\u0131
+    i\xE7in su\xE7luluk duyan bir orta ya\u015Fl\u0131 adam."
+  portrait: {fileID: 0}
+  knownFacts:
+  - "T\xFCccar tap\u0131na\u011Fa kupas\u0131n\u0131 b\u0131rakmak i\xE7in geldi."
+  - "Ge\xE7 saatte tap\u0131na\u011F\u0131 kilitledim."
+  hiddenFacts:
+  - "T\xFCccar\u0131n o\u011Flunu da gece i\xE7eri ald\u0131m, kimseye s\xF6ylemedim."
+  - "N\xF6bette uyuklad\u0131m, ger\xE7ek olay\u0131 g\xF6rmedim."
+  mandatoryFinalFact: "T\xFCccar\u0131n o\u011Flunu o gece i\xE7eri ben ald\u0131m."
+  patienceCount: 5

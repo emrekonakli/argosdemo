@@ -29,6 +29,7 @@ namespace Argos.Game
         public ArtifactData[] sampleArtifacts;
         public AIConfig aiConfig;
         public ScenarioData scenario;
+        public System.Collections.Generic.List<Argos.NPC.NPCData> suspectsForCaseBoard = new System.Collections.Generic.List<Argos.NPC.NPCData>();
 
         [Header("Room layout")]
         public Vector2 roomMin = new Vector2(-10f, -7.5f);
@@ -54,6 +55,7 @@ namespace Argos.Game
             BuildCanvas();
             WireUp();
             BuildArtifacts();
+            BuildCaseBoard();
         }
 
         // ---------------------------------------------------------------
@@ -61,26 +63,11 @@ namespace Argos.Game
         // ---------------------------------------------------------------
         void BuildManagers()
         {
-            // Manager'lar DontDestroyOnLoad — sahne reload'da yaşıyorlar.
-            // Mevcut Instance varsa yeniden yaratma, sadece konfigürasyonu güncelle.
-            if (GameManager.Instance != null)
-            {
-                managersRoot = GameManager.Instance.gameObject;
-                if (scenario != null) GameManager.Instance.SetScenario(scenario);
-                return;
-            }
-
-            managersRoot = new GameObject("Managers");
-            managersRoot.AddComponent<GameManager>();
-            managersRoot.AddComponent<QuestManager>();
-            managersRoot.AddComponent<ScoreManager>();
-            managersRoot.AddComponent<PortalManager>();
-            var ai = managersRoot.AddComponent<AIManager>();
-            var fb = managersRoot.AddComponent<FallbackResponseManager>();
-            managersRoot.AddComponent<AITester>(); // Faz 8 geçici — F tuşuyla AI test.
-            if (aiConfig != null) ai.SetConfig(aiConfig);
-            ai.SetFallback(fb);
-            if (scenario != null) GameManager.Instance?.SetScenario(scenario);
+            // ManagersInitializer (RuntimeInitializeOnLoadMethod) DDOL manager'ları
+            // zaten kurdu. Burası sadece sahne-spesifik konfigürasyonu bağlar.
+            if (GameManager.Instance != null) managersRoot = GameManager.Instance.gameObject;
+            if (aiConfig != null && AIManager.Instance != null) AIManager.Instance.SetConfig(aiConfig);
+            if (scenario != null && GameManager.Instance != null) GameManager.Instance.SetScenario(scenario);
         }
 
         // ---------------------------------------------------------------
@@ -209,6 +196,7 @@ namespace Argos.Game
             BuildJournalButton(canvasGo.transform);
             BuildInternalVoicePanel(canvasGo.transform);
             UIBuilders.BuildInterrogationPanel(canvasGo.transform);
+            UIBuilders.BuildSuspectSelectionPanel(canvasGo.transform);
 
             // UIManager singleton'ı Canvas üstüne ekleyelim (sahne-scoped).
             uiManager = canvasGo.AddComponent<UIManager>();
@@ -542,6 +530,43 @@ namespace Argos.Game
             }
         }
 
+        // ---------------------------------------------------------------
+        // Dava Panosu (duvarda dikdörtgen, oyuncu yaklaşınca SuspectSelectionPanel açar)
+        // ---------------------------------------------------------------
+        void BuildCaseBoard()
+        {
+            // Üst duvarın hemen iç tarafına yerleştir.
+            var go = new GameObject("CaseBoard");
+            go.transform.position = new Vector3(0f, roomMax.y - 1.2f, 0f);
+            go.transform.localScale = new Vector3(2.2f, 1.4f, 1f);
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = MakeWhiteSprite();
+            sr.color = new Color(0.78f, 0.62f, 0.38f);
+            sr.sortingOrder = 4;
+
+            var col = go.AddComponent<BoxCollider2D>();
+            col.isTrigger = true;
+            col.size = new Vector2(1.6f, 2.5f); // yaklaşım alanı genişçe
+
+            go.AddComponent<CaseBoardInteractable>();
+
+            // Üzerine "DAVA" yazısı (TextMesh world space).
+            var labelGo = new GameObject("Label");
+            labelGo.transform.SetParent(go.transform, false);
+            labelGo.transform.localPosition = Vector3.zero;
+            labelGo.transform.localScale = new Vector3(1f / go.transform.localScale.x, 1f / go.transform.localScale.y, 1f);
+            var tm = labelGo.AddComponent<TextMesh>();
+            tm.text = "DAVA";
+            tm.fontSize = 60;
+            tm.characterSize = 0.03f;
+            tm.anchor = TextAnchor.MiddleCenter;
+            tm.alignment = TextAlignment.Center;
+            tm.color = new Color(0.15f, 0.1f, 0.05f);
+            var mr = labelGo.GetComponent<MeshRenderer>();
+            if (mr != null) mr.sortingOrder = 5;
+        }
+
         Color ArtifactColor(ArtifactData data)
         {
             if (data.isPortalTrigger) return new Color(0.75f, 0.45f, 0.9f);  // anomali rengi
@@ -563,6 +588,9 @@ namespace Argos.Game
                 uiManager.journal = canvas.GetComponentInChildren<JournalUI>(true);
                 uiManager.internalVoice = canvas.GetComponentInChildren<InternalVoiceUI>(true);
                 uiManager.interrogation = canvas.GetComponentInChildren<InterrogationUI>(true);
+                uiManager.suspectSelection = canvas.GetComponentInChildren<SuspectSelectionUI>(true);
+                if (uiManager.suspectSelection != null && suspectsForCaseBoard != null && suspectsForCaseBoard.Count > 0)
+                    uiManager.suspectSelection.SetSuspects(suspectsForCaseBoard);
             }
             if (QuestManager.Instance != null && uiManager != null && uiManager.questBox != null)
                 QuestManager.Instance.SetQuestBox(uiManager.questBox);

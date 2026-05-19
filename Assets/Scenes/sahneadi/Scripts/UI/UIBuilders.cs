@@ -120,6 +120,118 @@ namespace Argos.UI
         }
 
         // ============================================================
+        // SuspectSelectionPanel — Dava Panosu'na tıklayınca açılan şüpheli listesi.
+        // ============================================================
+        public static SuspectSelectionUI BuildSuspectSelectionPanel(Transform parent)
+        {
+            var root = MakePanel(parent, "SuspectSelectionPanel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(620f, 540f), new Color(0.1f, 0.08f, 0.08f, 0.96f));
+
+            var header = MakeText(root.transform, "Header", new Vector2(0, 230), new Vector2(580, 50), 24, TextAlignmentOptions.Center);
+            header.text = "Dava Panosu — Şüpheliler";
+            header.color = new Color(0.95f, 0.92f, 0.85f);
+
+            var listGo = new GameObject("List");
+            listGo.transform.SetParent(root.transform, false);
+            var listRt = listGo.AddComponent<RectTransform>();
+            listRt.anchorMin = new Vector2(0.5f, 0.5f);
+            listRt.anchorMax = new Vector2(0.5f, 0.5f);
+            listRt.pivot = new Vector2(0.5f, 1f);
+            listRt.anchoredPosition = new Vector2(0, 195);
+            listRt.sizeDelta = new Vector2(560, 360);
+            var vlg = listGo.AddComponent<VerticalLayoutGroup>();
+            vlg.spacing = 8f;
+            vlg.padding = new RectOffset(8, 8, 8, 8);
+            vlg.childControlHeight = true; vlg.childControlWidth = true;
+            vlg.childForceExpandHeight = false; vlg.childForceExpandWidth = true;
+
+            var closeBtn = MakeButton(root.transform, "CloseBtn", "Kapat", new Vector2(0, -230), new Vector2(200, 50));
+
+            var sus = root.AddComponent<SuspectSelectionUI>();
+            sus.Setup(root, listRt, closeBtn);
+            root.SetActive(false);
+            return sus;
+        }
+
+        // ============================================================
+        // NewspaperPanel — tam ekran gazete giriş/çıkış görseli.
+        // ============================================================
+        public static NewspaperUI BuildNewspaperPanel(Transform parent)
+        {
+            var root = new GameObject("NewspaperPanel");
+            root.transform.SetParent(parent, false);
+            var rt = root.AddComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            var bg = root.AddComponent<Image>();
+            bg.color = new Color(0.94f, 0.9f, 0.78f, 1f); // bej eski kağıt rengi
+
+            // İçerik konteyneri — orta 80% alan.
+            var content = new GameObject("Content");
+            content.transform.SetParent(root.transform, false);
+            var cRt = content.AddComponent<RectTransform>();
+            cRt.anchorMin = new Vector2(0.1f, 0.05f);
+            cRt.anchorMax = new Vector2(0.9f, 0.95f);
+            cRt.offsetMin = Vector2.zero;
+            cRt.offsetMax = Vector2.zero;
+
+            // Tarih (üst sağ küçük)
+            var dateLbl = MakeAnchoredText(content.transform, "Date", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-10f, -10f), new Vector2(220f, 28f), 14, TextAlignmentOptions.TopRight);
+            dateLbl.color = new Color(0.3f, 0.2f, 0.1f);
+
+            // Başlık (üstte büyük)
+            var headlineLbl = MakeAnchoredText(content.transform, "Headline", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -60f), new Vector2(900f, 90f), 36, TextAlignmentOptions.Center);
+            headlineLbl.color = new Color(0.12f, 0.08f, 0.05f);
+            headlineLbl.fontStyle = FontStyles.Bold;
+
+            // Gövde
+            var bodyLbl = MakeAnchoredText(content.transform, "Body", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), new Vector2(900f, 250f), 18, TextAlignmentOptions.TopLeft);
+            bodyLbl.color = new Color(0.2f, 0.15f, 0.1f);
+
+            // Skor (alt orta)
+            var scoreLbl = MakeAnchoredText(content.transform, "Score", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -160f), new Vector2(400f, 40f), 22, TextAlignmentOptions.Center);
+            scoreLbl.color = new Color(0.5f, 0.1f, 0.1f);
+            scoreLbl.fontStyle = FontStyles.Bold;
+
+            // Primary button (alt orta)
+            var priBtn = MakeButton(content.transform, "Primary", "", new Vector2(-130, -240), new Vector2(240, 60));
+            var priLbl = priBtn.GetComponentInChildren<TMP_Text>(true);
+
+            // Secondary button
+            var secBtn = MakeButton(content.transform, "Secondary", "", new Vector2(130, -240), new Vector2(240, 60));
+            secBtn.image.color = new Color(0.4f, 0.4f, 0.4f, 0.9f);
+            var secLbl = secBtn.GetComponentInChildren<TMP_Text>(true);
+            secBtn.gameObject.SetActive(false);
+
+            var paper = root.AddComponent<NewspaperUI>();
+            paper.Setup(root, headlineLbl, dateLbl, bodyLbl, scoreLbl, priBtn, priLbl, secBtn, secLbl);
+            // Sahnede yaratıldığında pasif başlat — Show çağrılınca aktif olur.
+            // NewspaperScene'de Bootstrap aktif edecek; diğer sahnelerde overlay olarak gizli kalır.
+            root.SetActive(false);
+            return paper;
+        }
+
+        // Yardımcı: custom anchor'lı text — köşeye konumlanma için.
+        static TMP_Text MakeAnchoredText(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPos, Vector2 size, float fontSize, TextAlignmentOptions align)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = anchorMin;
+            rt.anchorMax = anchorMax;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = anchoredPos;
+            rt.sizeDelta = size;
+            var tmp = go.AddComponent<TextMeshProUGUI>();
+            tmp.fontSize = fontSize;
+            tmp.alignment = align;
+            tmp.color = Color.white;
+            tmp.textWrappingMode = TextWrappingModes.Normal;
+            return tmp;
+        }
+
+        // ============================================================
         // Helpers — sade panel/text/button
         // ============================================================
         static GameObject MakePanel(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPos, Vector2 size, Color color)
