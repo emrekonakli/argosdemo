@@ -1,0 +1,495 @@
+================================================================================
+ARGOS — UNITY 6 MVP YAPIM YOL HARİTASI
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+[MEMORY / SONRAKİ CLAUDE CODE OTURUMU İÇİN NOT]
+────────────────────────────────────────────────────────────────────────────────
+
+Bu dosya Halid (kullanıcı) ile Claude Code arasında ortak yol haritası olarak
+oluşturuldu. Amaç: ARGOS oyununu (Unity 6 + 2D URP, Türkçe müze dedektif oyunu)
+tek bir promptta bitirmek mümkün olmadığı için, aşama aşama "yap → denetle →
+devam et" akışıyla ilerletmek.
+
+Kaynak tasarım dokümanı:
+  C:\Users\khali\OneDrive\Masaüstü\halid\halid.md
+
+Bu dosyanın bulunduğu yer:
+  C:\Users\khali\OneDrive\Masaüstü\argos\unity\argosdemo\ARGOS_PLAN.txt
+  (Unity, Assets/ dışındaki dosyaları içe aktarmaz — bu yüzden proje kökünde.)
+
+YENİ OTURUMDA NE YAPMALI:
+  1. Önce bu dosyayı yukarıdan aşağıya oku.
+  2. "DURUM TABLOSU" bölümüne bak — en son neyin DONE / IN-PROGRESS / TODO
+     olduğunu gör.
+  3. Halid'e "Şu an X aşamasındayız. Yapılacak Y. Devam edelim mi?" diye sor.
+  4. İlgili aşamanın "Yapılacaklar" listesini uygula.
+  5. Bitince o aşamayı DONE olarak işaretle (bu .txt'yi güncelle).
+  6. Halid'in test edip onaylamasını bekle ("denetle" adımı) — onayı gelmeden
+     sıradaki aşamaya geçme.
+  7. Hafıza dosyalarını da güncel tut:
+     C:\Users\khali\.claude\projects\C--Users-khali-OneDrive-Masa-st--argos-
+       unity-argosdemo\memory\
+
+ÇALIŞMA STİLİ KURALLARI:
+  - Halid Türkçe konuşur, sen de Türkçe yanıtla.
+  - Spesifikasyondan sapmadan önce sor.
+  - Bir aşama bittiğinde Halid'in Unity'de test etmesini iste; her şeyi
+    "tamamlandı" diye işaretleme — gerçek doğrulama Unity Editor'de oynanışla
+    yapılır.
+  - Placeholder her zaman tasarım dokümanındaki kurallara uysun (Bölüm 11).
+  - Var olan kodu silmeden / yeniden yazmadan önce neden silindiğini düşün.
+  - Her aşamada sadece o aşamanın işini yap, kapsamı genişletme.
+
+================================================================================
+DURUM TABLOSU (SON GÜNCELLEME: 2026-05-19)
+================================================================================
+
+LEGEND: [✓] DONE   [~] IN PROGRESS   [ ] TODO   [!] BLOCKED
+
+  [✓] FAZ 0  — Proje iskelet + script altyapısı
+  [✓] FAZ 1  — PlayerController + WASD görsel joystick + kamera
+  [ ] FAZ 2  — Museum sahnesi: Tilemap zemin/duvar/mobilya
+  [ ] FAZ 3  — Artifact sistemi: ScriptableObject asset'leri + Inspect paneli
+  [ ] FAZ 4  — PlayerInventory + Gadget fotoğraf akışı
+  [ ] FAZ 5  — InternalVoice paneli + otomatik EvidenceNote
+  [ ] FAZ 6  — QuestManager + QuestBox akışı (4 adımlık)
+  [ ] FAZ 7  — Portal sistemi: animasyon, PortalScene, geri dönüş
+  [ ] FAZ 8  — AIConfig.asset + AIManager testi (API key opsiyonel)
+  [ ] FAZ 9  — InterrogationPanel: sabır barı, sohbet, kanıt gösterme
+  [ ] FAZ 10 — Suçlu seçimi: Dava Panosu + SuspectSelectionPanel
+  [ ] FAZ 11 — NewspaperScene: giriş ve iki varyant çıkış
+  [ ] FAZ 12 — ScoreManager hesaplama + sona erme ekranı
+  [ ] FAZ 13 — Polish: ses placeholder, fade'ler, edge case'ler
+
+================================================================================
+FAZ 0 — PROJE İSKELET + SCRIPT ALTYAPISI                          [✓ DONE]
+================================================================================
+
+AMAÇ: Tasarım dokümanındaki klasör yapısı + tüm script dosyalarının iskeleti
+hazır olsun.
+
+YAPILANLAR (2026-05-19 baştan kurulum):
+  - Assets/Scenes/sahneadi/Scripts/ altında modül klasörleri:
+    Player, AI, Artifacts, NPC, UI, Portal, Game, Joystick, Evidence, Scenarios
+  - ScriptableObject sınıfları: ArtifactData, NPCData, ScenarioData, AIConfig
+  - Manager iskeletleri: GameManager, QuestManager, ScoreManager, AIManager,
+    FallbackResponseManager, PortalManager, UIManager, PlayerInventory
+  - Interaktif component'ler: ArtifactInteractable, NPCInteractable,
+    CaseBoardInteractable, PortalExitTrigger
+  - UI script iskeletleri: ArtifactInspectUI, JournalUI, InterrogationUI,
+    NewspaperUI, SuspectSelectionUI, QuestBox, GadgetWarningBanner,
+    InternalVoiceUI, InteractPrompt
+  - Evidence sınıfları: EvidenceItem (abstract), EvidenceNote, EvidencePhoto
+  - Player: PlayerController, PlayerInventory, PlayerGadget
+  - Joystick: WasdJoystick (WASD görsel, mobil touch yok)
+  - Camera: ArgosCameraFollow (NOT "CameraFollow" — Unity paketlerinden biriyle
+    isim çakışıyor, derleme hatası verdi)
+  - MuseumSceneBootstrap: Player/Camera/Canvas/Walls/Managers'ı runtime'da
+    procedural kurar. buildOnStart=true varsayılan.
+  - MuseumScene.unity: Assets/Scenes/sahneadi/Scenes/ altında, içinde Bootstrap
+    GameObject + MuseumSceneBootstrap component (filesystem'den elle yazıldı,
+    çünkü MCP bridge bu noktada yanıt vermiyordu).
+  - ProjectSettings.asset → activeInputHandler: 2 zaten dosyada (Halid'in
+    önceki Faz 0 değişikliği reset'te korundu).
+
+DENETLE (Halid):
+  - Unity'ye dön. Console'da kırmızı yok mu?
+  - Project penceresinde Assets/Scenes/sahneadi/Scenes/MuseumScene.unity
+    görünüyor mu, çift tıklayınca açılıyor mu?
+  - Play'e basınca: ekranda mavi kare (Player), gri/koyu duvarlar, sol altta
+    joystick alanı + knob. WASD'a basınca knob kayıyor mu? Karakter hareket
+    ediyor mu? Kamera takip ediyor mu?
+
+EĞER FAİL OLURSA:
+  - "CameraFollow" hatası → ArgosCameraFollow olarak değişti, hâlâ eski isim
+    görüyorsa Bootstrap güncel değil demektir.
+  - MCP bridge çökmesi → Unity recompile / domain reload yapıyor olabilir,
+    bir dakika bekleyip yeniden dene.
+  - Scene açılmıyor → MuseumScene.unity .meta dosyası Unity tarafından
+    otomatik oluşturulmalı; tetikleme için Project penceresine sağ tıkla →
+    Refresh.
+
+NOTLAR:
+  - VirtualJoystick (mobil) yerine WasdJoystick (sadece görsel + WASD tetikli).
+    Mobil build'e geçildiğinde tekrar gözden geçir.
+  - ArgosCameraFollow ismi: Unity 2D paketlerinin (muhtemelen Cinemachine veya
+    URP) içinde public bir CameraFollow tipi var, namespace içine alınsa bile
+    type resolution çakışıyor. Argos prefix'i ekledim.
+
+================================================================================
+FAZ 1 — PLAYERCONTROLLER + WASD JOYSTICK + KAMERA                 [✓ DONE]
+================================================================================
+
+AMAÇ: Karakter WASD ile hareket etsin, kamera lerp ile takip etsin, sol alt
+köşede gri/beyaz WASD joystick görseli oynasın.
+
+YAPILANLAR (2026-05-19 Faz 0 ile birlikte Bootstrap üzerinden):
+  - PlayerController.cs: Rigidbody2D + Input.GetAxisRaw("Horizontal/Vertical"),
+    flipX sağ/sol için.
+  - WasdJoystick.cs: WASD'a göre knob Lerp'leniyor (sadece görsel).
+  - ArgosCameraFollow.cs: SmoothDamp + min/max bounds clamp + Shake coroutine.
+  - MuseumSceneBootstrap.BuildPlayer / BuildCamera / BuildJoystickVisual:
+    Player (mavi kare 0.5 scale), Main Camera (orthographic 5),
+    Canvas + JoystickArea + JoystickKnob (WasdJoystick attached).
+  - PlaceholderWalls: 4 dış duvar (BoxCollider2D) + zemin sprite.
+
+TEST SONUCU:
+  - [✓] Play'de mavi kare görünüyor.
+  - [✓] WASD ile hareket çalışıyor.
+  - [✓] Kamera takip + duvar clamp çalışıyor.
+  - [✓] Joystick knob WASD'a göre kayıyor, bırakınca merkeze dönüyor.
+  - [✓] flipX sol/sağ yönüne göre değişiyor.
+  - Halid 2026-05-19 "her şey okey" onayı verdi.
+
+================================================================================
+FAZ 2 — MUSEUM TILEMAP (ZEMİN / DUVAR / MOBİLYA)                  [ TODO]
+================================================================================
+
+AMAÇ: Tasarım dokümanı Bölüm 3.1 — gerçek Tilemap sistemini kullan.
+20x15 oda, 32x32 px tile.
+
+ŞU AN: MuseumSceneBootstrap, duvarları SpriteRenderer + BoxCollider2D olarak
+runtime'da yapıyor. Tilemap yok.
+
+YAPILACAKLAR:
+  - [ ] Assets/Sprites/Placeholders/ altına basit Tile asset'leri oluştur:
+        floor_light.tile, wall_dark.tile, furniture_brown.tile (Unity'nin
+        TilePalette'inden veya kod ile).
+  - [ ] Bir TilePalette oluştur (Window > 2D > Tile Palette).
+  - [ ] MuseumScene'e Grid + 3 Tilemap (Floor, Walls, Furniture) ekle.
+  - [ ] Walls Tilemap'ine TilemapCollider2D + CompositeCollider2D ekle.
+  - [ ] MuseumSceneBootstrap'ten BuildFloor + BuildWalls'ı kaldır
+        (veya buildOnStart=false yapacak alternatif).
+  - [ ] 20x15 odanın dış sınırlarına duvar tile'larını yerleştir.
+  - [ ] Birkaç vitrin/mobilya tile'ı ekle (3-4 adet).
+
+DENETLE:
+  - Karakter duvarlardan geçemiyor.
+  - Tilemap görünür, runtime'da SpriteRenderer duvarları görünmüyor.
+  - Kamera bounds Tilemap sınırlarına uygun.
+
+NOTLAR:
+  - Bootstrap script'i artık sahnede önceden hazır Tilemap varsayacak.
+    BuildPlayer/Camera/Canvas/Managers tarafları kalsın.
+
+================================================================================
+FAZ 3 — ARTIFACT SİSTEMİ: ASSET'LER + INSPECT PANELİ              [ TODO]
+================================================================================
+
+AMAÇ: ArtifactData ScriptableObject asset'leri yarat, sahnede 3 eser instance
+yap, ArtifactInspectUI çalıştır.
+
+YAPILACAKLAR:
+  - [ ] Assets/ScriptableObjects/Artifacts/ altında en az 3 .asset:
+        Eser_A.asset (normal, isEvidenceTarget=false)
+        Eser_B.asset (kanıt hedefi, isEvidenceTarget=true)
+        Eser_C.asset (portal trigger, isPortalTrigger=true, internalVoiceLine
+        dolu)
+  - [ ] MuseumSceneBootstrap'in sampleArtifacts[] alanını Inspector'dan doldur
+        (veya bu üç asset'i Resources/ üzerinden yükle).
+  - [ ] ArtifactInspectUI prefab/sahne objesi: arka plan, ad, dönem+köken,
+        açıklama, [Fotoğraf Çek] (sadece evidence ise aktif), [Kapat].
+  - [ ] UIManager.artifactInspect inspector slot'una bu UI'yi ata.
+  - [ ] InspectPanel: 3D model viewer alanı için gri placeholder Image yeterli
+        (Bölüm 3.6'daki gerçek RenderTexture sonra).
+
+DENETLE:
+  - Karakterle Eser_A'ya yaklaşınca "İncele [E]" prompt'u çıkar.
+  - E'ye basınca panel açılır, asset verisi panelde görünür.
+  - [Fotoğraf Çek] sadece Eser_B'de aktif.
+  - [Kapat] paneli kapatır.
+  - Eser_C'ye yaklaşınca anomali banner'ı çıkar (Faz 7'de portal akışına
+    bağlanacak).
+
+================================================================================
+FAZ 4 — PLAYERINVENTORY + GADGET FOTOĞRAF AKIŞI                   [ TODO]
+================================================================================
+
+AMAÇ: Fotoğraf çekilince PlayerInventory'ye EvidencePhoto eklensin, JournalUI'de
+listelenebilsin.
+
+ŞU AN: PlayerGadget.TakePhoto var, PlayerInventory.AddPhoto var. UI'daki
+[Fotoğraf Çek] butonunu Gadget'a bağlamak ve JournalUI'yi göstermek gerek.
+
+YAPILACAKLAR:
+  - [ ] ArtifactInspectUI içindeki [Fotoğraf Çek] butonu:
+          Player'ın PlayerGadget komponentini bul, TakePhoto(currentData)
+          çağır, paneli kapat.
+  - [ ] PlayerGadget.flashOverlay için Canvas üstünde tam ekran beyaz
+        CanvasGroup yarat (Bootstrap içinde).
+  - [ ] PlayerGadget.cameraSound: boş AudioSource (placeholder).
+  - [ ] JournalUI: scrollview + her item için label + thumbnail prefab.
+  - [ ] UIManager.journal inspector slot bağlı.
+  - [ ] Canvas'ta sağ altta JournalButton (Bootstrap içinde) → UIManager.
+        OpenJournal().
+
+DENETLE:
+  - Eser_B inceleyince [Fotoğraf Çek]'e basıldığında ekran kısa beyazlanır,
+    PlayerInventory.Photos sayısı 1 artar.
+  - Journal açıldığında o fotoğraf listede görünür.
+  - Aynı eserden tekrar fotoğraf çekilebilir mi? (MVP'de evet, kontrol etmiyoruz.)
+
+================================================================================
+FAZ 5 — INTERNAL VOICE PANELİ + OTOMATİK EVIDENCENOTE             [ TODO]
+================================================================================
+
+AMAÇ: ArtifactData.internalVoiceLine dolu olan esere ilk yaklaşmada konuşma
+balonu açılsın ve Journal'a EvidenceNote eklensin.
+
+ŞU AN: ArtifactInteractable.OnInteract içinde internalVoicePlayed bayrağıyla
+PlayerInventory.AddNote ve UIManager.PlayInternalVoice çağrılıyor.
+
+YAPILACAKLAR:
+  - [ ] InternalVoiceUI: alt ekranda konuşma balonu (panel + TMP_Text).
+  - [ ] Play(line) → paneli aktive et, metni yaz, 3 sn sonra otomatik kapan
+        (Invoke ile).
+  - [ ] UIManager.internalVoice inspector slot.
+  - [ ] Karaca portresi (placeholder: küçük gri kare) panelin sol köşesinde.
+
+DENETLE:
+  - Eser_C incelenince konuşma balonu açılır, 3 sn sonra kapanır.
+  - Journal'da bir not eklenir.
+  - Tekrar incelendiğinde balon TEKRAR açılmaz (internalVoicePlayed bayrağı).
+
+================================================================================
+FAZ 6 — QUESTMANAGER + QUESTBOX AKIŞI                             [ TODO]
+================================================================================
+
+AMAÇ: Tasarım dokümanı Bölüm 3.9 — 4 adımlık görev listesi otomatik akıyor.
+
+ŞU AN: QuestManager.questTexts hard-coded 4 adım. AdvanceQuest() metodu var
+ama hiçbir yerden çağrılmıyor.
+
+YAPILACAKLAR:
+  - [ ] Adım 0 → "Müzeyi keşfet ve şüpheli eserleri incele."
+        Tetik: ilk artifact incelendiğinde QuestManager.AdvanceQuest().
+  - [ ] Adım 1 → "Anomali tespit edilen esere yaklaş ve portalı kullan."
+        Tetik: PortalManager.OpenPortal çağrıldığında AdvanceQuest().
+  - [ ] Adım 2 → "Geçmişten kanıt topla ve müzeye dön."
+        Tetik: PortalManager.ReturnToMuseum çağrıldığında AdvanceQuest().
+  - [ ] Adım 3 → "Dava panosundan suçluyu seç ve sorgula."
+        Tetik: Faz 10'da SuspectSelectionUI açıldığında.
+
+DENETLE:
+  - QuestBox sağ üstte her zaman görünür ve metni dinamik olarak değişir.
+  - Sahne yüklenince adım 0 görünür.
+
+================================================================================
+FAZ 7 — PORTAL SİSTEMİ: ANİMASYON + SAHNE GEÇİŞİ                  [ TODO]
+================================================================================
+
+AMAÇ: Anomali tespiti → Portal Aç butonu → fade + (camera shake) → PortalScene
+yüklenir. PortalExitTrigger → ReturnToMuseum.
+
+ŞU AN: PortalManager.OpenPortal Fade + LoadScene("PortalScene") yapar ama
+PortalScene mevcut değil. Camera shake CameraFollow.Shake var ama
+PortalManager'dan tetiklenmiyor.
+
+YAPILACAKLAR:
+  - [ ] Assets/Scenes/sahneadi/Scenes/PortalScene.unity yarat.
+        İçinde: Grid + Tilemap (koyu taş rengi), bir Player spawn point,
+        bir PortalExitTrigger (kırmızı X sprite + trigger collider),
+        Main Camera + EventSystem + Canvas + UIManager.
+  - [ ] PortalScene'e ayrı bir bootstrap script (PortalSceneBootstrap.cs)
+        ya da MuseumSceneBootstrap'a benzer ama küçük versiyon.
+  - [ ] Build Settings'e MuseumScene ve PortalScene'i ekle.
+  - [ ] PortalManager.OpenPortal'da CameraFollow.Shake coroutine'ini çağır.
+  - [ ] GadgetWarningBanner anomali tespit edilince çıksın (PlayerGadget
+        zaten çağırıyor — banner'ı UIManager'a tanıt).
+  - [ ] PortalScene'e en az 1 NPC (NPCData ile) yerleştir → Faz 9 için
+        sorgu deneyi.
+
+DENETLE:
+  - Eser_C'ye yaklaşınca üst orta'da "Anomali Tespit Edildi!" banner çıkar.
+  - Etkileşim prompt'u "İncele" değil "Portal Aç" olarak görünür
+    (özelleştirme gerekli — şu an "İncele" çıkıyor).
+  - Onaylayınca ekran kararır, PortalScene yüklenir.
+  - Çıkış noktasına gelip onaylayınca müzeye dönülür ve Eser_C bir daha
+    portal açmaz (portalUsed=true).
+
+NOTLAR:
+  - "Portal Aç" özelleştirmesi: PlayerGadget.SetNearbyPortalArtifact içinde
+    Bootstrap'in UIManager.ShowInteractPrompt'unu özel label'la çağırması
+    veya ayrı bir banner button'ı.
+
+================================================================================
+FAZ 8 — AICONFIG + AIMANAGER TESTİ                                [ TODO]
+================================================================================
+
+AMAÇ: Bir AIConfig.asset hazır olsun, API key boş olsa bile FallbackManager
+çalışsın.
+
+YAPILACAKLAR:
+  - [ ] Assets/ScriptableObjects/AIConfig.asset yarat (provider=OpenAI,
+        apiKey="" boş, modelName="gpt-4o-mini").
+  - [ ] AIManager inspector'da config ve fallback referansları bağla
+        (Bootstrap.BuildManagers içinde AIManager + Fallback aynı objeye
+        eklenmiş — fallback referansı reflection veya GetComponent ile
+        set edilebilir).
+  - [ ] Bir test script (geçici): Update'te bir tuşa basılınca
+        AIManager.SendChat çağır, fallback cevabı Debug.Log'a düşür.
+
+DENETLE:
+  - API key boşken anında konserve cevap dönüyor.
+  - API key dolu olunca gerçek cevap geliyor (Halid kendi key'iyle test eder).
+
+NOTLAR:
+  - AIManager.fallback için Bootstrap'i güncelle: aynı GameObject'e iki
+    component eklendiği için AddComponent sonrası referansı reflection ile
+    set et.
+
+================================================================================
+FAZ 9 — INTERROGATIONPANEL                                        [ TODO]
+================================================================================
+
+AMAÇ: NPC'ye yaklaş → [Konuş] → InterrogationUI açılır → sohbet, sabır barı,
+kanıt gösterme çalışır.
+
+ŞU AN: InterrogationUI.cs tam yazılmış (sabır, evidence picker, suçlu modu
+dahil). Sahnede karşılığı YOK.
+
+YAPILACAKLAR:
+  - [ ] PortalScene'e bir NPC GameObject (NPCInteractable + NPCData asset).
+  - [ ] NPCData asset(ler)i: knownFacts, hiddenFacts, mandatoryFinalFact,
+        patienceCount=6.
+  - [ ] InterrogationUI'yi sahne Canvas'ı altında prefab olarak kur:
+        root panel, npcPortrait, npcName, patienceLabel, chatHistory,
+        inputField, sendButton, evidenceButton, summaryButton, exitButton,
+        preInterrogationPanel (alt panel), evidencePickerPanel (alt panel).
+  - [ ] UIManager.interrogation slot'una ata.
+  - [ ] Evidence picker item prefab: küçük buton + TMP_Text.
+
+DENETLE:
+  - NPC'ye yaklaşınca [Konuş] prompt'u çıkar.
+  - Panel açılır, NPC bilgileri görünür.
+  - Önce summary panel açılır.
+  - Mesaj gönderince sabır 1 azalır, AI cevabı (fallback de olabilir) gelir.
+  - Kanıt göster butonu → fotoğraf listesi → seçilen fotoğraf chat'e düşer.
+  - Sabır 0 olunca panel otomatik kapanır.
+
+================================================================================
+FAZ 10 — SUÇLU SEÇİMİ + SUÇLU SORGUSU                             [ TODO]
+================================================================================
+
+AMAÇ: Tasarım dokümanı Bölüm 5.5 — Dava Panosu'na yaklaşıp şüpheli seç,
+suçlu modunda sorgu aç.
+
+ŞU AN: CaseBoardInteractable + SuspectSelectionUI iskeletleri var.
+
+YAPILACAKLAR:
+  - [ ] SuspectSelectionUI'yi sahne Canvas'ı altında kur:
+        root panel, listParent, suspectItemPrefab, closeButton.
+  - [ ] ScenarioData asset: 1 senaryo (gazete metni + culprit NPCData).
+  - [ ] SuspectSelectionUI.suspects listesi 3 NPCData ile dolu (1'i suçlu).
+  - [ ] GameManager.SetScenario(asset) MuseumSceneBootstrap'tan çağrılsın
+        (veya GameManager Inspector'da asset bağlı).
+  - [ ] Suçlu sorgusunda InterrogationUI culpritMode=true → exitButton
+        gizlenir, "İTİRAF:" prefix'i geldiğinde GameManager.SolveCase + sona
+        erme akışı.
+
+DENETLE:
+  - Dava Panosu'na yaklaşınca "Dava Panosu" prompt'u çıkar.
+  - Şüpheli listesinde 3 isim + portreler.
+  - Yanlış şüpheliyi seçince WrongSuspectCount++.
+  - Suçlu sorgusunda evidence göstererek itiraf alınabilir → newspaper end
+    (Faz 11).
+
+================================================================================
+FAZ 11 — NEWSPAPER SCENE: GİRİŞ + ÇIKIŞ                           [ TODO]
+================================================================================
+
+AMAÇ: Tasarım dokümanı Bölüm 2 — gazete giriş/çıkış ekranları.
+
+ŞU AN: NewspaperUI.cs var. Sahne yok. SampleScene.unity'i kullanabiliriz veya
+yeni NewspaperScene yarat.
+
+YAPILACAKLAR:
+  - [ ] Assets/Scenes/sahneadi/Scenes/NewspaperScene.unity yarat.
+  - [ ] UI: tam ekran gazete sprite (placeholder beyaz panel), büyük başlık,
+        tarih, "DAVAYI ÜSTLEN" butonu (giriş) veya iki varyant (çıkış).
+  - [ ] NewspaperUI.Show(isEnding, isCorrect) içinde:
+          isEnding=false → "Davayı Üstlen" → SceneManager.LoadScene
+            ("MuseumScene") + Adım 0 quest.
+          isEnding=true, isCorrect=true → "Dava Çözüldü" başlığı +
+            "Tekrar Oyna" + "Ana Menü".
+          isEnding=true, isCorrect=false → "Yanlış Suçlama" + "Tekrar Dene".
+  - [ ] Build Settings'e ekle. İlk sahne NewspaperScene olsun.
+  - [ ] GameManager.RestartScenario → NewspaperScene'e döner.
+
+DENETLE:
+  - Oyun NewspaperScene ile başlar.
+  - "DAVAYI ÜSTLEN" → MuseumScene açılır.
+  - Doğru suçlu yakalanınca ending gazete çıkar.
+  - Yanlış suçlu durumunda ikinci varyant.
+
+================================================================================
+FAZ 12 — SCOREMANAGER + SONA ERME EKRANI                          [ TODO]
+================================================================================
+
+AMAÇ: Tasarım dokümanı Bölüm 6 — puan hesaplama ve ending'de gösterim.
+
+ŞU AN: ScoreManager.CalculateScore() implementli ama UI'a bağlı değil.
+
+YAPILACAKLAR:
+  - [ ] NewspaperUI ending varyantlarında ScoreManager.CalculateScore()'u
+        çağır ve sayıyı TMP_Text olarak göster.
+  - [ ] Sona erme akışı: InterrogationUI.FinishCulpritWin →
+        UIManager.OpenNewspaper(true, true) → NewspaperScene yüklenmiyor,
+        overlay olarak gösteriliyor.
+        Kararlaştır: NewspaperScene mi açılacak, panel mi? Tasarım Bölüm 2
+        ayrı sahne diyor. Sahne LoadScene yap.
+
+DENETLE:
+  - Doğru suçlu yakalandıktan sonra gazete ekranında puan görünür.
+  - Yanlış suçlama sayısı, kanıt sayısı, ortalama sabır formülü tutuyor.
+
+================================================================================
+FAZ 13 — POLISH                                                   [ TODO]
+================================================================================
+
+AMAÇ: MVP'yi sunulabilir hale getir.
+
+YAPILACAKLAR:
+  - [ ] Ses placeholder'ları (boş AudioSource'lar): kamera, fade, portal
+        açılış, NPC'ye yaklaşma.
+  - [ ] Tüm Fade'leri kontrol et (PortalManager.fadeOverlay null kontrol).
+  - [ ] Edge case: API key boşken InterrogationUI fallback ile sabır barı
+        yine düşer mi? Düşmeli.
+  - [ ] "Geri Dön" prompt'u PortalExitTrigger'da → "Geri Dön" görünür.
+  - [ ] MuseumScene'e geri dönüldüğünde GameManager + QuestManager + PortalMan
+        ager DontDestroyOnLoad olduğu için duplicate olmuyor mu? Test et.
+  - [ ] PlayerInventory DontDestroyOnLoad değil — sahne geçişinde envanter
+        sıfırlanıyor. Düzelt: PlayerInventory'yi GameManager'a taşı veya
+        DontDestroyOnLoad yap.
+
+DENETLE:
+  - Tam tur: NewspaperScene → MuseumScene → PortalScene → MuseumScene →
+    DavaPanosu → suçlu sorgu → ending newspaper. Hata yok.
+
+================================================================================
+ENDPOINT (BU FAZ DIŞI MARKERS)
+================================================================================
+
+TASARIM DOKÜMANINDA "SONRA GELECEKLER" (Bölüm 12) — MVP'de YAPILMAYACAK:
+  - Kullanıcı hesabı / giriş
+  - Flashback sistemi
+  - Gerçek pixel art
+  - Gerçek ses + müzik
+  - iOS build
+  - Reklam / abonelik
+  - UGC senaryo editörü
+  - Çoklu senaryo
+  - Gerçek 3D model entegrasyonu
+
+BU YOL HARİTASINI GÜNCELLEME KURALLARI:
+  - Bir faz tamamlandığında DURUM TABLOSU'ndaki ikonu [✓] yap.
+  - Yarım kalırsa [~] yap, hangi adımın bittiğini ilgili faz bölümünde
+    [x] olarak işaretle.
+  - "SON GÜNCELLEME" tarihini güncelle.
+  - Yeni bir fikir geldiğinde ilgili faza ek YAPILACAK satırı ekle.
+  - Faz sırasını değiştirme — sıra bağımlı.
+
+================================================================================
+DOSYA SONU
+================================================================================
