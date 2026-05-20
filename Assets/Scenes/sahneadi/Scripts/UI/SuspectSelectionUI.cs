@@ -14,6 +14,8 @@ namespace Argos.UI
         [SerializeField] private Button closeButton;
         [SerializeField] private List<NPCData> suspects = new List<NPCData>();
 
+        public bool IsOpen => root != null && root.activeSelf;
+
         public void Setup(GameObject rootObj, RectTransform list, Button close)
         {
             root = rootObj;

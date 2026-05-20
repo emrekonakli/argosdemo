@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Argos.AI;
 using Argos.Evidence;
@@ -29,6 +31,8 @@ namespace Argos.UI
         [SerializeField] private GameObject evidencePickerPanel;
         [SerializeField] private RectTransform evidencePickerContent;
         [SerializeField] private Button evidencePickerClose;
+
+        public bool IsOpen => root != null && root.activeSelf;
 
         private NPCData currentNpc;
         private bool culpritMode;
@@ -85,7 +89,7 @@ namespace Argos.UI
             if (npcName != null) npcName.text = npc.npcName + (culprit ? " (SUÇLU)" : "");
             if (npcPortrait != null) npcPortrait.sprite = npc.portrait;
             if (chatHistory != null) chatHistory.text = "";
-            if (exitButton != null) exitButton.gameObject.SetActive(!culprit);
+            if (exitButton != null) exitButton.gameObject.SetActive(true);
             UpdatePatienceLabel();
             OpenSummary();
         }
@@ -150,12 +154,24 @@ namespace Argos.UI
                 GameManager.Instance?.SolveCase(currentNpc);
                 if (ScoreManager.Instance != null)
                     ScoreManager.Instance.LastInterrogationRemainingPatience = remainingPatience;
-                // TODO Faz 11/12: NewspaperUI ending akışı.
+                GameManager.PendingNewspaperEnding = true;
+                await Task.Delay(1500);
+                SceneManager.LoadScene(Scenes.Newspaper);
                 return;
             }
 
-            if (remainingPatience <= 0 && !culpritMode)
+            if (remainingPatience <= 0)
             {
+                if (culpritMode)
+                {
+                    AppendChat("Sistem", "Sorgu sona erdi — itiraf alınamadı.");
+                    if (ScoreManager.Instance != null)
+                        ScoreManager.Instance.LastInterrogationRemainingPatience = 0;
+                    GameManager.PendingNewspaperEnding = true;
+                    await Task.Delay(1500);
+                    SceneManager.LoadScene(Scenes.Newspaper);
+                    return;
+                }
                 AppendChat("Sistem", "Görüşme sona erdi.");
                 if (ScoreManager.Instance != null)
                     ScoreManager.Instance.LastInterrogationRemainingPatience = 0;
@@ -173,7 +189,10 @@ namespace Argos.UI
         void UpdatePatienceLabel()
         {
             if (patienceLabel == null) return;
-            patienceLabel.text = culpritMode ? "SUÇLU SORGUSU" : $"Sabır: {remainingPatience}/{(currentNpc != null ? currentNpc.patienceCount : 0)}";
+            int max = currentNpc != null ? currentNpc.patienceCount : 0;
+            patienceLabel.text = culpritMode
+                ? $"SUÇLU SORGUSU — Sabır: {remainingPatience}/{max}"
+                : $"Sabır: {remainingPatience}/{max}";
         }
 
         string BuildSystemPrompt()

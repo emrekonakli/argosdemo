@@ -24,16 +24,28 @@ namespace Argos.Game
         // Faz 2'den itibaren duvar/zemin Tilemap'ten geliyor. Tilemap olmayan sahnede
         // hızlı test için true yapılabilir.
         public bool buildWalls = false;
+        // PNG'nin dış kenarlarına otomatik 4 görünmez border. Elle collider çizecekseniz
+        // false yapın — sahnede kendi BoxCollider2D / PolygonCollider2D'lerinizi koyun.
+        public bool buildInvisibleBorders = true;
 
         [Header("Optional refs")]
         public ArtifactData[] sampleArtifacts;
         public AIConfig aiConfig;
         public ScenarioData scenario;
         public System.Collections.Generic.List<Argos.NPC.NPCData> suspectsForCaseBoard = new System.Collections.Generic.List<Argos.NPC.NPCData>();
+        // Player yön sprite'ları — boş bırakılırsa Resources/Detective_* yüklenir; hepsi de yoksa mavi kareye düşülür.
+        public Sprite playerSpriteFront;
+        public Sprite playerSpriteBack;
+        public Sprite playerSpriteLeft;
+        public Sprite playerSpriteRight;
 
         [Header("Room layout")]
-        public Vector2 roomMin = new Vector2(-10f, -7.5f);
-        public Vector2 roomMax = new Vector2(10f, 7.5f);
+        // PNG arka plan (1264x848, PPU 63.2) ile yarı boyut: 10 x 6.71.
+        public Vector2 roomMin = new Vector2(-10f, -6.71f);
+        public Vector2 roomMax = new Vector2(10f, 6.71f);
+
+        [Header("Background")]
+        public Sprite museumBackground;
 
         private GameObject managersRoot;
         private GameObject player;
@@ -49,6 +61,9 @@ namespace Argos.Game
         public void BuildScene()
         {
             BuildManagers();
+            DeactivateOldTilemap();
+            BuildBackground();
+            if (buildInvisibleBorders) BuildInvisibleBorders();
             if (buildWalls) BuildWalls();
             BuildPlayer();
             BuildCamera();
@@ -56,6 +71,58 @@ namespace Argos.Game
             WireUp();
             BuildArtifacts();
             BuildCaseBoard();
+        }
+
+        // ---------------------------------------------------------------
+        // Eski Tilemap (Faz 2 placeholder zemin/duvarlar) — PNG arka plan
+        // bunu görsel olarak değiştirdiği için kapatıyoruz. Collider'lar
+        // yerine BuildInvisibleBorders manuel sınır kuruyor.
+        // ---------------------------------------------------------------
+        void DeactivateOldTilemap()
+        {
+            var tilemapGo = GameObject.Find("MuseumTilemap");
+            if (tilemapGo != null) tilemapGo.SetActive(false);
+        }
+
+        // ---------------------------------------------------------------
+        // Arka plan müze sahnesi (PNG, sortingOrder -100, oda merkezinde).
+        // ---------------------------------------------------------------
+        void BuildBackground()
+        {
+            var sprite = museumBackground != null ? museumBackground : Resources.Load<Sprite>("MuseumBackground");
+            if (sprite == null) return;
+
+            var go = new GameObject("MuseumBackground");
+            go.transform.position = Vector3.zero;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = -100;
+        }
+
+        // ---------------------------------------------------------------
+        // Oyuncuyu PNG zemini dışına çıkarmayan görünmez sınır collider'ları.
+        // ---------------------------------------------------------------
+        void BuildInvisibleBorders()
+        {
+            var root = new GameObject("InvisibleBorders");
+            float thickness = 1f;
+            float w = roomMax.x - roomMin.x;
+            float h = roomMax.y - roomMin.y;
+            Vector2 center = (roomMin + roomMax) * 0.5f;
+
+            MakeBorder(root.transform, "Border_Top",    new Vector2(center.x, roomMax.y + thickness * 0.5f), new Vector2(w + thickness * 2f, thickness));
+            MakeBorder(root.transform, "Border_Bottom", new Vector2(center.x, roomMin.y - thickness * 0.5f), new Vector2(w + thickness * 2f, thickness));
+            MakeBorder(root.transform, "Border_Left",   new Vector2(roomMin.x - thickness * 0.5f, center.y), new Vector2(thickness, h));
+            MakeBorder(root.transform, "Border_Right",  new Vector2(roomMax.x + thickness * 0.5f, center.y), new Vector2(thickness, h));
+        }
+
+        void MakeBorder(Transform parent, string name, Vector2 pos, Vector2 size)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent);
+            go.transform.position = new Vector3(pos.x, pos.y, 0f);
+            go.transform.localScale = new Vector3(size.x, size.y, 1f);
+            go.AddComponent<BoxCollider2D>();
         }
 
         // ---------------------------------------------------------------
@@ -128,11 +195,25 @@ namespace Argos.Game
             player = new GameObject("Player");
             player.tag = "Player";
             player.transform.position = Vector3.zero;
-            player.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
 
             var sr = player.AddComponent<SpriteRenderer>();
-            sr.sprite = MakeWhiteSprite();
-            sr.color = new Color(0.25f, 0.55f, 0.95f);
+            var front = playerSpriteFront != null ? playerSpriteFront : Resources.Load<Sprite>("Detective_Front");
+            var back  = playerSpriteBack  != null ? playerSpriteBack  : Resources.Load<Sprite>("Detective_Back");
+            var left  = playerSpriteLeft  != null ? playerSpriteLeft  : Resources.Load<Sprite>("Detective_Left");
+            var right = playerSpriteRight != null ? playerSpriteRight : Resources.Load<Sprite>("Detective_Right");
+            bool hasSprites = front != null || back != null || left != null || right != null;
+            if (hasSprites)
+            {
+                sr.sprite = front != null ? front : (back ?? left ?? right);
+                sr.color = Color.white;
+                player.transform.localScale = Vector3.one;
+            }
+            else
+            {
+                sr.sprite = MakeWhiteSprite();
+                sr.color = new Color(0.25f, 0.55f, 0.95f);
+                player.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+            }
             sr.sortingOrder = 10;
 
             var rb = player.AddComponent<Rigidbody2D>();
@@ -140,7 +221,11 @@ namespace Argos.Game
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
 
             player.AddComponent<BoxCollider2D>();
-            player.AddComponent<PlayerController>();
+            var pc = player.AddComponent<PlayerController>();
+            pc.spriteFront = front;
+            pc.spriteBack = back;
+            pc.spriteLeft = left;
+            pc.spriteRight = right;
             player.AddComponent<PlayerInventory>();
             var gadget = player.AddComponent<PlayerGadget>();
             var audio = player.AddComponent<AudioSource>();
@@ -498,11 +583,15 @@ namespace Argos.Game
         {
             if (sampleArtifacts == null || sampleArtifacts.Length == 0) return;
 
+            // PNG vitrin koordinatları (PPU=63.2):
+            //  [0] Sol üst (güneş kursu vitrini)    → Eser_A
+            //  [1] Sağ üst (tablet vitrini)          → Eser_B
+            //  [2] Sol alt (aslan heykeli vitrini)   → Eser_C (Halid'in atamasına göre)
             Vector3[] positions =
             {
-                new Vector3(-5f, 0f, 0f),
-                new Vector3(5f, 0f, 0f),
-                new Vector3(0f, 5f, 0f),
+                new Vector3(-7.31f,  2.75f, 0f),
+                new Vector3( 7.41f,  2.75f, 0f),
+                new Vector3(-7.31f, -3.58f, 0f),
             };
 
             var root = new GameObject("Artifacts");
@@ -535,9 +624,9 @@ namespace Argos.Game
         // ---------------------------------------------------------------
         void BuildCaseBoard()
         {
-            // Üst duvarın hemen iç tarafına yerleştir.
+            // PNG'de sağ kapının iç tarafı.
             var go = new GameObject("CaseBoard");
-            go.transform.position = new Vector3(0f, roomMax.y - 1.2f, 0f);
+            go.transform.position = new Vector3(roomMax.x - 1.2f, -0.89f, 0f);
             go.transform.localScale = new Vector3(2.2f, 1.4f, 1f);
 
             var sr = go.AddComponent<SpriteRenderer>();

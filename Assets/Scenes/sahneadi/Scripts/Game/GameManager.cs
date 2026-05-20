@@ -10,6 +10,10 @@ namespace Argos.Game
     {
         public static GameManager Instance { get; private set; }
 
+        // Sahne geçişinde NewspaperScene'in ending mi intro mu olarak açılacağını
+        // sinyaller. NewspaperSceneBootstrap okuduktan sonra sıfırlar.
+        public static bool PendingNewspaperEnding { get; set; }
+
         [SerializeField] private ScenarioData currentScenario;
         public ScenarioData CurrentScenario => currentScenario;
 

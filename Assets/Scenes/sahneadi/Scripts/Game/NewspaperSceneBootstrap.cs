@@ -30,6 +30,15 @@ namespace Argos.Game
             if (scenario != null && GameManager.Instance != null && GameManager.Instance.CurrentScenario == null)
                 GameManager.Instance.SetScenario(scenario);
 
+            // Sorgu sonrası NewspaperScene'e yönlendirildiysek ending modunda aç,
+            // doğru/yanlış ayrımını GameManager.CaseSolved belirler.
+            if (GameManager.PendingNewspaperEnding)
+            {
+                isEndingScene = true;
+                isCorrect = GameManager.Instance != null && GameManager.Instance.CaseSolved;
+                GameManager.PendingNewspaperEnding = false;
+            }
+
             BuildCamera();
             var paper = BuildCanvas();
             paper.Show(isEndingScene, isCorrect);

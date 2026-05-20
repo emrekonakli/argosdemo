@@ -18,6 +18,16 @@ namespace Argos.UI
         public GadgetWarningBanner gadgetWarning;
         public InteractPrompt interactPrompt;
 
+        // Bir modal panel açıkken oyun input'larını (hareket + E etkileşim)
+        // bloklamak için kullanılır. QuestBox / GadgetWarning / InternalVoice
+        // modal değil — onlar IsAnyModalOpen'ı etkilemez.
+        public bool IsAnyModalOpen =>
+            (artifactInspect != null && artifactInspect.IsOpen) ||
+            (journal != null && journal.IsOpen) ||
+            (interrogation != null && interrogation.IsOpen) ||
+            (suspectSelection != null && suspectSelection.IsOpen) ||
+            (newspaper != null && newspaper.IsOpen);
+
         void Awake()
         {
             if (Instance != null && Instance != this)

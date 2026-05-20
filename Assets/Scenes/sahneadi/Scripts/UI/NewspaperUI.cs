@@ -19,6 +19,8 @@ namespace Argos.UI
         [SerializeField] private Button secondaryButton;
         [SerializeField] private TMP_Text secondaryButtonLabel;
 
+        public bool IsOpen => root != null && root.activeSelf;
+
         public void Setup(GameObject rootObj, TMP_Text headlineLbl, TMP_Text dateLbl, TMP_Text bodyLbl, TMP_Text scoreLbl, Button pri, TMP_Text priLbl, Button sec, TMP_Text secLbl)
         {
             root = rootObj;
@@ -98,6 +100,16 @@ namespace Argos.UI
         public void Hide()
         {
             if (root != null) root.SetActive(false);
+        }
+
+        void Update()
+        {
+            // Panel açıkken Space / Enter primary button'ı tetiklesin
+            // (intro: DAVAYI ÜSTLEN, ending: TEKRAR OYNA / TEKRAR DENE).
+            if (root == null || !root.activeSelf) return;
+            if (primaryButton == null || !primaryButton.gameObject.activeInHierarchy || !primaryButton.interactable) return;
+            if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+                primaryButton.onClick.Invoke();
         }
     }
 }

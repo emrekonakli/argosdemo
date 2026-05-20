@@ -15,6 +15,7 @@ namespace Argos.UI
         [SerializeField] private Button closeButton;
 
         public ArtifactData CurrentData { get; private set; }
+        public bool IsOpen => root != null && root.activeSelf;
 
         public System.Action<ArtifactData> OnTakePhoto;
 
@@ -38,7 +39,7 @@ namespace Argos.UI
             if (nameLabel != null) nameLabel.text = data.artifactName;
             if (periodOriginLabel != null) periodOriginLabel.text = $"{data.artifactPeriod} • {data.artifactOrigin}";
             if (descriptionLabel != null) descriptionLabel.text = data.artifactDescription;
-            if (photoButton != null) photoButton.interactable = data.isEvidenceTarget;
+            if (photoButton != null) photoButton.interactable = data != null;
         }
 
         public void Hide()

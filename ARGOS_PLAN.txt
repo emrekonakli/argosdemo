@@ -42,7 +42,7 @@ YENİ OTURUMDA NE YAPMALI:
   - Her aşamada sadece o aşamanın işini yap, kapsamı genişletme.
 
 ================================================================================
-DURUM TABLOSU (SON GÜNCELLEME: 2026-05-19)
+DURUM TABLOSU (SON GÜNCELLEME: 2026-05-20)
 ================================================================================
 
 LEGEND: [✓] DONE   [~] IN PROGRESS   [ ] TODO   [!] BLOCKED
@@ -59,8 +59,8 @@ LEGEND: [✓] DONE   [~] IN PROGRESS   [ ] TODO   [!] BLOCKED
   [✓] FAZ 9  — InterrogationPanel: sabır barı, sohbet, kanıt gösterme
   [✓] FAZ 10 — Suçlu seçimi: Dava Panosu + SuspectSelectionPanel
   [✓] FAZ 11 — NewspaperScene: giriş ve iki varyant çıkış
-  [ ] FAZ 12 — ScoreManager hesaplama + sona erme ekranı
-  [ ] FAZ 13 — Polish: ses placeholder, fade'ler, edge case'ler
+  [✓] FAZ 12 — ScoreManager hesaplama + sona erme ekranı
+  [✓] FAZ 13 — Polish: ses placeholder, fade'ler, edge case'ler
 
 ================================================================================
 FAZ 0 — PROJE İSKELET + SCRIPT ALTYAPISI                          [✓ DONE]
@@ -444,48 +444,102 @@ DENETLE:
   - Yanlış suçlu durumunda ikinci varyant.
 
 ================================================================================
-FAZ 12 — SCOREMANAGER + SONA ERME EKRANI                          [ TODO]
+FAZ 12 — SCOREMANAGER + SONA ERME EKRANI                          [✓ DONE]
 ================================================================================
 
 AMAÇ: Tasarım dokümanı Bölüm 6 — puan hesaplama ve ending'de gösterim.
 
-ŞU AN: ScoreManager.CalculateScore() implementli ama UI'a bağlı değil.
+YAPILANLAR (2026-05-20):
+  - GameManager'a `public static bool PendingNewspaperEnding` flag eklendi —
+    sahne geçişi sırasında NewspaperScene'in ending mi intro mu açılacağını
+    sinyaller. NewspaperSceneBootstrap okuduktan sonra sıfırlar.
+  - InterrogationUI.OnSend culprit-mode akışı tamamlandı:
+      * Reply "İTİRAF:" ile başlarsa → GameManager.SolveCase(npc) +
+        ScoreManager.LastInterrogationRemainingPatience set + PendingNewspaper
+        Ending=true + 1.5 sn delay (player itirafı okusun) + SceneManager
+        .LoadScene(Newspaper).
+      * remainingPatience<=0 ise culpritMode'da yanlış-suçlama ending'i
+        tetiklenir: "Sorgu sona erdi — itiraf alınamadı" sistem mesajı,
+        Patience=0 kaydı, PendingNewspaperEnding=true, LoadScene(Newspaper).
+        GameManager.CaseSolved false kaldığı için NewspaperUI yanlış varyantı
+        gösterir.
+      * Normal NPC (culpritMode değil) sabır 0 davranışı korundu —
+        InterrogationUI Hide().
+  - NewspaperSceneBootstrap.Start: PendingNewspaperEnding true ise
+    isEndingScene'i true'ya çeker, isCorrect = GameManager.CaseSolved okur,
+    flag'i sıfırlar. Inspector'daki değerler ending-trigger yoksa korunur.
+  - ScoreManager.CalculateScore zaten implementli + NewspaperUI ending
+    varyantında `Puan: {score}` olarak gösteriliyor (Faz 11 hazırlığından).
+  - Skor formülü: 1000 + (Notes+Photos)*50 - WrongSuspectCount*200 +
+    LastInterrogationRemainingPatience*30.
 
-YAPILACAKLAR:
-  - [ ] NewspaperUI ending varyantlarında ScoreManager.CalculateScore()'u
-        çağır ve sayıyı TMP_Text olarak göster.
-  - [ ] Sona erme akışı: InterrogationUI.FinishCulpritWin →
-        UIManager.OpenNewspaper(true, true) → NewspaperScene yüklenmiyor,
-        overlay olarak gösteriliyor.
-        Kararlaştır: NewspaperScene mi açılacak, panel mi? Tasarım Bölüm 2
-        ayrı sahne diyor. Sahne LoadScene yap.
+DENETLE (Halid):
+  - Doğru suçlu seçilip yeterli kanıt sunulduğunda AI "İTİRAF:" ile cevap
+    versin (gerçek API key gerek; fallback default "İTİRAF:" döndürmez —
+    Faz 8 fallback test mantığını hatırla).
+  - 1.5 sn sonra NewspaperScene açılmalı, "DAVA ÇÖZÜLDÜ!" başlığı + suçlu
+    adı + "Puan: N" görünmeli.
+  - Yanlış suçlu seçilip sabır 0'a indirildiğinde "YANLIŞ SUÇLAMA!" başlıklı
+    ending açılmalı, skor yine görünmeli (kanıt bonusu var, sabır bonusu 0,
+    WrongSuspect penaltısı düşülmüş).
+  - "TEKRAR OYNA" → MuseumScene açılır, GameManager.RestartScenario clears
+    WrongSuspect+CaseSolved+usedPortals; PendingNewspaperEnding zaten
+    consume edildiği için intro state'e dönmez (Newspaper Scene'e geri
+    dönülürse intro açılır).
+  - "Ana Menü" → NewspaperScene yeniden yüklenir, intro modu açılır.
 
-DENETLE:
-  - Doğru suçlu yakalandıktan sonra gazete ekranında puan görünür.
-  - Yanlış suçlama sayısı, kanıt sayısı, ortalama sabır formülü tutuyor.
+EDGE / NOT:
+  - Fallback API cevabı "İTİRAF:" prefix'i içermez — gerçek API key olmadan
+    suçlu sorgusunda confession ending tetiklenmez, sadece patience 0 yanlış
+    ending tetiklenir. Bu Faz 8 adım 2 (gerçek API key testi) ile çözülür.
+  - Test sırasında patience hızlıca tüketmek için suçlu NPC'nin patienceCount
+    değeri 3-4 yapılabilir (Inspector'dan ScenarioData/NPCData üstünden).
 
 ================================================================================
-FAZ 13 — POLISH                                                   [ TODO]
+FAZ 13 — POLISH                                                   [✓ DONE]
 ================================================================================
 
 AMAÇ: MVP'yi sunulabilir hale getir.
 
-YAPILACAKLAR:
-  - [ ] Ses placeholder'ları (boş AudioSource'lar): kamera, fade, portal
-        açılış, NPC'ye yaklaşma.
-  - [ ] Tüm Fade'leri kontrol et (PortalManager.fadeOverlay null kontrol).
-  - [ ] Edge case: API key boşken InterrogationUI fallback ile sabır barı
-        yine düşer mi? Düşmeli.
-  - [ ] "Geri Dön" prompt'u PortalExitTrigger'da → "Geri Dön" görünür.
-  - [ ] MuseumScene'e geri dönüldüğünde GameManager + QuestManager + PortalMan
-        ager DontDestroyOnLoad olduğu için duplicate olmuyor mu? Test et.
-  - [ ] PlayerInventory DontDestroyOnLoad değil — sahne geçişinde envanter
-        sıfırlanıyor. Düzelt: PlayerInventory'yi GameManager'a taşı veya
-        DontDestroyOnLoad yap.
+YAPILANLAR (2026-05-20):
+  - [x] Ses placeholder'ları (boş AudioSource'lar):
+        * PlayerGadget kamera AudioSource'u zaten BuildPlayer içinde var
+          (clip=null, sound designer ekleyecek).
+        * PortalManager.Awake → portalOpenAudio + fadeAudio AudioSource
+          component'leri ekleniyor; OpenPortal / Fade içinde guarded
+          PlayIfHasClip(src) çağrısı (clip null ise no-op).
+        * NPCInteractable.Awake → approachAudio AudioSource; OnTriggerEnter2D
+          oyuncu yaklaştığında clip varsa Play.
+  - [x] Tüm Fade'lerde null kontrol: PortalManager.Fade'de zaten
+        `if (fadeOverlay == null) yield break;` var. PortalManager kendi
+        DDOL canvas+overlay'ini Awake'de EnsureFadeOverlay ile garanti
+        ediyor — sahne change'de fade kaybolmuyor.
+  - [x] Edge case: API key boşken InterrogationUI fallback ile sabır barı
+        düşüyor — InterrogationUI.OnSend AI cevabını beklemeden ÖNCE
+        `remainingPatience--` yapıyor (line 137). Fallback dönse bile
+        flow değişmez. Doğrulandı (kod incelemesi).
+  - [x] PortalExitTrigger "Geri Dön [E]" prompt'u zaten implementli
+        (PortalExitTrigger.cs OnTriggerEnter2D).
+  - [x] Singleton duplicate kontrolü: ManagersInitializer
+        RuntimeInitializeOnLoadMethod(BeforeSceneLoad) ile yalnız bir kez
+        çalışıyor, "Managers" GO DDOL. Her manager Awake'de
+        `if (Instance != null && Instance != this) Destroy(this); return;`
+        guard'ı yapıyor. Sahne reload'da duplicate olmaz. Doğrulandı.
+  - [x] PlayerInventory DDOL maddesi: Plan'daki varsayım yanlıştı —
+        PlayerInventory.Awake zaten `DontDestroyOnLoad(gameObject)` çağırıyor
+        (line 25). Player GameObject sahne geçişinde yaşıyor.
+        MuseumSceneBootstrap.BuildPlayer mevcut Player'ı bulup pozisyon
+        resetliyor, yenisini yaratmıyor. Yani envanter sahne geçişinde
+        zaten kayboluyordu — bunun aksine, korunuyor.
 
-DENETLE:
+DENETLE (Halid — Faz 13 hâlâ runtime test gerektirir):
   - Tam tur: NewspaperScene → MuseumScene → PortalScene → MuseumScene →
-    DavaPanosu → suçlu sorgu → ending newspaper. Hata yok.
+    DavaPanosu → suçlu sorgu → ending newspaper. Console temiz olmalı,
+    duplicate Manager log'u (ManagersInitializer 2x çağırılmaz) olmamalı,
+    portal fade düzgün çalmalı.
+  - Faz 8 adım 2 hâlâ open: gerçek API key ile InterrogationUI confession
+    ending'i test edilmeli. Fallback "İTİRAF:" döndürmediği için sadece
+    patience-0 yanlış-suçlama ending'i fallback ile test edilebilir.
 
 ================================================================================
 ENDPOINT (BU FAZ DIŞI MARKERS)

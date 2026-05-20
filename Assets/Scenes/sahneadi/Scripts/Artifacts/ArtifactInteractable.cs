@@ -55,6 +55,7 @@ namespace Argos.Artifacts
         void Update()
         {
             if (!playerInRange) return;
+            if (UIManager.Instance != null && UIManager.Instance.IsAnyModalOpen) return;
             if (Input.GetKeyDown(KeyCode.E)) OnInteract();
         }
 

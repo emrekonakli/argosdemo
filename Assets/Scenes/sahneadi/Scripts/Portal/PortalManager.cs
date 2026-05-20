@@ -12,6 +12,9 @@ namespace Argos.Portal
 
         [SerializeField] private CanvasGroup fadeOverlay;
         [SerializeField] private float fadeDuration = 0.5f;
+        // Faz 13 placeholder ses: clip atanırsa portal/fade'de çalar, atanmazsa no-op.
+        [SerializeField] private AudioSource portalOpenAudio;
+        [SerializeField] private AudioSource fadeAudio;
 
         public bool IsInPortal { get; private set; }
 
@@ -25,6 +28,21 @@ namespace Argos.Portal
             Instance = this;
             DontDestroyOnLoad(gameObject);
             EnsureFadeOverlay();
+            EnsureAudioSources();
+        }
+
+        void EnsureAudioSources()
+        {
+            if (portalOpenAudio == null)
+            {
+                portalOpenAudio = gameObject.AddComponent<AudioSource>();
+                portalOpenAudio.playOnAwake = false;
+            }
+            if (fadeAudio == null)
+            {
+                fadeAudio = gameObject.AddComponent<AudioSource>();
+                fadeAudio.playOnAwake = false;
+            }
         }
 
         // PortalManager kendi DDOL canvas'ında bir tam ekran siyah overlay tutar;
@@ -63,7 +81,13 @@ namespace Argos.Portal
         {
             QuestManager.Instance?.TryAdvance(1);
             ShakeMainCamera();
+            PlayIfHasClip(portalOpenAudio);
             StartCoroutine(OpenPortalRoutine());
+        }
+
+        static void PlayIfHasClip(AudioSource src)
+        {
+            if (src != null && src.clip != null) src.Play();
         }
 
         public void ReturnToMuseum()
@@ -98,6 +122,7 @@ namespace Argos.Portal
         IEnumerator Fade(float from, float to)
         {
             if (fadeOverlay == null) yield break;
+            PlayIfHasClip(fadeAudio);
             fadeOverlay.alpha = from;
             float t = 0f;
             while (t < fadeDuration)

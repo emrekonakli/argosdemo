@@ -11,6 +11,8 @@ namespace Argos.UI
         [SerializeField] private GameObject root;
         [SerializeField] private RectTransform contentParent;
 
+        public bool IsOpen => root != null && root.activeSelf;
+
         public void Setup(GameObject rootObj, RectTransform content)
         {
             root = rootObj;
