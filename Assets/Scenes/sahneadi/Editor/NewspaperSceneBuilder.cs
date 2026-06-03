@@ -11,6 +11,7 @@ namespace Argos.EditorTools
     public static class NewspaperSceneBuilder
     {
         const string NewspaperScenePath = "Assets/Scenes/sahneadi/Scenes/NewspaperScene.unity";
+        const string OfficeScenePath = "Assets/Scenes/sahneadi/Scenes/OfficeScene.unity";
         const string MuseumScenePath = "Assets/Scenes/sahneadi/Scenes/MuseumScene.unity";
         const string PortalScenePath = "Assets/Scenes/sahneadi/Scenes/PortalScene.unity";
         const string ScenarioPath = "Assets/Scenes/sahneadi/ScriptableObjects/Scenarios/Senaryo_FrigyaCinayeti.asset";
@@ -45,30 +46,34 @@ namespace Argos.EditorTools
             AssetDatabase.SaveAssets();
 
             EditorSceneManager.OpenScene(MuseumScenePath, OpenSceneMode.Single);
-            Debug.Log("[ARGOS] NewspaperScene built; Build Settings + playModeStartScene güncellendi (Editor'de Play her zaman NewspaperScene'den başlar).");
+            Debug.Log("[ARGOS] NewspaperScene built; Build Settings + playModeStartScene güncellendi (Editor'de Play her zaman OfficeScene'den başlar).");
         }
 
         static void SetPlayModeStartScene()
         {
-            var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(NewspaperScenePath);
+            var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(OfficeScenePath);
             if (sceneAsset != null) EditorSceneManager.playModeStartScene = sceneAsset;
         }
 
         /// <summary>
-        /// Unity yeniden başladığında playModeStartScene sıfırlanmışsa otomatik yeniden bağla.
+        /// Unity yeniden başladığında playModeStartScene'i OfficeScene'e bağlar.
+        /// Eskiden NewspaperScene'i zorluyordu; artık giriş sahnesi Office.
         /// </summary>
         [InitializeOnLoadMethod]
         static void EnsurePlayModeStartScene()
         {
-            if (EditorSceneManager.playModeStartScene != null) return;
-            SetPlayModeStartScene();
+            var officeAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(OfficeScenePath);
+            if (officeAsset == null) return;
+            if (EditorSceneManager.playModeStartScene == officeAsset) return;
+            EditorSceneManager.playModeStartScene = officeAsset;
         }
 
         static void UpdateBuildSettings()
         {
-            // NewspaperScene ilk index — oyun açılınca o yüklenecek.
+            // OfficeScene ilk index — oyun açılınca o yüklenecek.
             var ordered = new List<EditorBuildSettingsScene>
             {
+                new EditorBuildSettingsScene(OfficeScenePath, true),
                 new EditorBuildSettingsScene(NewspaperScenePath, true),
                 new EditorBuildSettingsScene(MuseumScenePath, true),
                 new EditorBuildSettingsScene(PortalScenePath, true),

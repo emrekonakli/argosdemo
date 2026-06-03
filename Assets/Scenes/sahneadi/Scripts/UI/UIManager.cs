@@ -14,6 +14,7 @@ namespace Argos.UI
         public InterrogationUI interrogation;
         public NewspaperUI newspaper;
         public SuspectSelectionUI suspectSelection;
+        public CaseBoardUI caseBoard;
         public QuestBox questBox;
         public GadgetWarningBanner gadgetWarning;
         public InteractPrompt interactPrompt;
@@ -26,6 +27,7 @@ namespace Argos.UI
             (journal != null && journal.IsOpen) ||
             (interrogation != null && interrogation.IsOpen) ||
             (suspectSelection != null && suspectSelection.IsOpen) ||
+            (caseBoard != null && caseBoard.IsOpen) ||
             (newspaper != null && newspaper.IsOpen);
 
         void Awake()
@@ -60,6 +62,12 @@ namespace Argos.UI
         {
             CloseAllPanels();
             if (suspectSelection != null) suspectSelection.Show();
+        }
+
+        public void OpenCaseBoard()
+        {
+            CloseAllPanels();
+            if (caseBoard != null) caseBoard.Show();
         }
 
         public void OpenNewspaper(bool isEnding, bool isCorrect)
@@ -98,6 +106,7 @@ namespace Argos.UI
             if (journal != null) journal.Hide();
             if (interrogation != null) interrogation.Hide();
             if (suspectSelection != null) suspectSelection.Hide();
+            if (caseBoard != null) caseBoard.Hide();
             if (newspaper != null) newspaper.Hide();
             if (internalVoice != null) internalVoice.Close();
         }

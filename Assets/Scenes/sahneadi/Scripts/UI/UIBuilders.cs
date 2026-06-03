@@ -232,6 +232,238 @@ namespace Argos.UI
         }
 
         // ============================================================
+        // CaseBoardPanel — 4 bölmeli dava panosu ekranı.
+        // ============================================================
+        public static CaseBoardUI BuildCaseBoardPanel(Transform parent)
+        {
+            // Ana panel — tam ekrana yakın
+            var root = MakePanel(parent, "CaseBoardPanel",
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                Vector2.zero, new Vector2(960f, 620f),
+                new Color(0.08f, 0.07f, 0.06f, 0.96f));
+
+            // Başlık
+            var header = MakeText(root.transform, "Header",
+                new Vector2(0, 280), new Vector2(900, 40), 26, TextAlignmentOptions.Center);
+            header.text = "DAVA PANOSU";
+            header.color = new Color(0.95f, 0.85f, 0.6f);
+            header.fontStyle = FontStyles.Bold;
+
+            float qW = 440f, qH = 240f;
+            float gap = 10f;
+
+            // ── SOL ÜST: Şüpheliler ──
+            var suspectsBg = MakePanel(root.transform, "SuspectsQuadrant",
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2(-(qW + gap) / 2f, (qH + gap) / 2f - 20f), new Vector2(qW, qH),
+                new Color(0.14f, 0.12f, 0.1f, 0.95f));
+            var suspLabel = MakeText(suspectsBg.transform, "Label",
+                new Vector2(0, 105), new Vector2(qW - 20, 30), 18, TextAlignmentOptions.Center);
+            suspLabel.text = "ŞÜPHELİLER";
+            suspLabel.color = new Color(0.9f, 0.75f, 0.4f);
+            suspLabel.fontStyle = FontStyles.Bold;
+
+            var suspectsScroll = MakeScrollRect(suspectsBg.transform, "SuspectsScroll",
+                new Vector2(0, -10), new Vector2(qW - 16, qH - 45));
+            var suspectsContent = suspectsScroll.GetComponent<ScrollRect>().content;
+
+            // ── SAĞ ÜST: İpuçları ──
+            var cluesBg = MakePanel(root.transform, "CluesQuadrant",
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2((qW + gap) / 2f, (qH + gap) / 2f - 20f), new Vector2(qW, qH),
+                new Color(0.12f, 0.14f, 0.12f, 0.95f));
+            var clueLabel = MakeText(cluesBg.transform, "Label",
+                new Vector2(0, 105), new Vector2(qW - 20, 30), 18, TextAlignmentOptions.Center);
+            clueLabel.text = "İPUÇLARI";
+            clueLabel.color = new Color(0.5f, 0.85f, 0.5f);
+            clueLabel.fontStyle = FontStyles.Bold;
+
+            var cluesScroll = MakeScrollRect(cluesBg.transform, "CluesScroll",
+                new Vector2(0, -10), new Vector2(qW - 16, qH - 45));
+            var cluesContent = cluesScroll.GetComponent<ScrollRect>().content;
+
+            // ── SOL ALT: Müze Krokisi ──
+            var mapBg = MakePanel(root.transform, "MapQuadrant",
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2(-(qW + gap) / 2f, -(qH + gap) / 2f - 20f), new Vector2(qW, qH),
+                new Color(0.12f, 0.12f, 0.14f, 0.95f));
+            var mapLabel = MakeText(mapBg.transform, "Label",
+                new Vector2(0, 105), new Vector2(qW - 20, 30), 18, TextAlignmentOptions.Center);
+            mapLabel.text = "MÜZE KROKİSİ";
+            mapLabel.color = new Color(0.6f, 0.7f, 0.95f);
+            mapLabel.fontStyle = FontStyles.Bold;
+
+            var mapBtnGo = new GameObject("MapButton");
+            mapBtnGo.transform.SetParent(mapBg.transform, false);
+            var mbRt = mapBtnGo.AddComponent<RectTransform>();
+            mbRt.anchorMin = new Vector2(0.5f, 0.5f);
+            mbRt.anchorMax = new Vector2(0.5f, 0.5f);
+            mbRt.pivot = new Vector2(0.5f, 0.5f);
+            mbRt.anchoredPosition = new Vector2(0, -10);
+            mbRt.sizeDelta = new Vector2(qW - 40, qH - 60);
+            var mbImg = mapBtnGo.AddComponent<Image>();
+            var museumSprite = Resources.Load<Sprite>("MuseumBackground");
+            if (museumSprite != null)
+            {
+                mbImg.sprite = museumSprite;
+                mbImg.color = Color.white;
+            }
+            else
+            {
+                mbImg.color = new Color(0.3f, 0.35f, 0.45f);
+            }
+            mbImg.preserveAspect = true;
+            var mapBtn = mapBtnGo.AddComponent<Button>();
+
+            // Harita overlay (tıklayınca büyük fotoğraf)
+            var mapOverlay = MakePanel(root.transform, "MapOverlay",
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                Vector2.zero, new Vector2(900f, 560f),
+                new Color(0f, 0f, 0f, 0.95f));
+            var fullImgGo = new GameObject("FullImage");
+            fullImgGo.transform.SetParent(mapOverlay.transform, false);
+            var fiRt = fullImgGo.AddComponent<RectTransform>();
+            fiRt.anchorMin = new Vector2(0.05f, 0.08f);
+            fiRt.anchorMax = new Vector2(0.95f, 0.92f);
+            fiRt.offsetMin = Vector2.zero;
+            fiRt.offsetMax = Vector2.zero;
+            var fullImg = fullImgGo.AddComponent<Image>();
+            if (museumSprite != null)
+            {
+                fullImg.sprite = museumSprite;
+                fullImg.color = Color.white;
+            }
+            else
+            {
+                fullImg.color = new Color(0.3f, 0.35f, 0.45f);
+            }
+            fullImg.preserveAspect = true;
+            var mapCloseBtn = MakeButton(mapOverlay.transform, "MapCloseBtn", "Kapat",
+                new Vector2(0, -250), new Vector2(160, 45));
+            mapOverlay.SetActive(false);
+
+            // ── SAĞ ALT: Gazete ──
+            var emptyBg = MakePanel(root.transform, "NewspaperQuadrant",
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2((qW + gap) / 2f, -(qH + gap) / 2f - 20f), new Vector2(qW, qH),
+                new Color(0.12f, 0.11f, 0.1f, 0.95f));
+            var newsLabel = MakeText(emptyBg.transform, "Label",
+                new Vector2(0, 105), new Vector2(qW - 20, 30), 18, TextAlignmentOptions.Center);
+            newsLabel.text = "GAZETE";
+            newsLabel.color = new Color(0.9f, 0.85f, 0.6f);
+            newsLabel.fontStyle = FontStyles.Bold;
+
+            var newsBtnGo = new GameObject("NewsButton");
+            newsBtnGo.transform.SetParent(emptyBg.transform, false);
+            var nbRt = newsBtnGo.AddComponent<RectTransform>();
+            nbRt.anchorMin = new Vector2(0.5f, 0.5f);
+            nbRt.anchorMax = new Vector2(0.5f, 0.5f);
+            nbRt.pivot = new Vector2(0.5f, 0.5f);
+            nbRt.anchoredPosition = new Vector2(0, -10);
+            nbRt.sizeDelta = new Vector2(qW - 40, qH - 60);
+            var nbImg = newsBtnGo.AddComponent<Image>();
+            nbImg.color = new Color(0.92f, 0.88f, 0.75f);
+            var newsBtn = newsBtnGo.AddComponent<Button>();
+
+            var newsInnerLabel = MakeText(newsBtnGo.transform, "InnerLabel",
+                Vector2.zero, Vector2.zero, 16, TextAlignmentOptions.Center);
+            var nilRt = newsInnerLabel.rectTransform;
+            nilRt.anchorMin = Vector2.zero; nilRt.anchorMax = Vector2.one;
+            nilRt.offsetMin = new Vector2(10, 10); nilRt.offsetMax = new Vector2(-10, -10);
+            newsInnerLabel.text = "Gazeteyi Oku";
+            newsInnerLabel.color = new Color(0.2f, 0.15f, 0.1f);
+            newsInnerLabel.fontStyle = FontStyles.Bold;
+
+            // "Aktif dava yok" label (dava kabul edilmeden gösterilir)
+            var noCaseGo = new GameObject("NoCaseLabel");
+            noCaseGo.transform.SetParent(root.transform, false);
+            var ncRt = noCaseGo.AddComponent<RectTransform>();
+            ncRt.anchorMin = new Vector2(0.5f, 0.5f);
+            ncRt.anchorMax = new Vector2(0.5f, 0.5f);
+            ncRt.pivot = new Vector2(0.5f, 0.5f);
+            ncRt.anchoredPosition = new Vector2(0, 40);
+            ncRt.sizeDelta = new Vector2(600, 80);
+            var ncTmp = noCaseGo.AddComponent<TextMeshProUGUI>();
+            ncTmp.text = "Rafa Kaldırılan Davalar";
+            ncTmp.fontSize = 32;
+            ncTmp.alignment = TextAlignmentOptions.Center;
+            ncTmp.color = new Color(0.5f, 0.45f, 0.35f);
+            ncTmp.fontStyle = FontStyles.Italic;
+            ncTmp.raycastTarget = false;
+            noCaseGo.SetActive(false);
+
+            // Rafa kaldırılan davalar listesi (no-case ekranında görünür)
+            var shelvedGo = new GameObject("ShelvedArea");
+            shelvedGo.transform.SetParent(root.transform, false);
+            var saRt = shelvedGo.AddComponent<RectTransform>();
+            saRt.anchorMin = new Vector2(0.5f, 0.5f);
+            saRt.anchorMax = new Vector2(0.5f, 0.5f);
+            saRt.pivot = new Vector2(0.5f, 1f);
+            saRt.anchoredPosition = new Vector2(0, -10);
+            saRt.sizeDelta = new Vector2(500, 300);
+            var saVlg = shelvedGo.AddComponent<VerticalLayoutGroup>();
+            saVlg.spacing = 8f;
+            saVlg.padding = new RectOffset(8, 8, 8, 8);
+            saVlg.childControlHeight = true;
+            saVlg.childControlWidth = true;
+            saVlg.childForceExpandHeight = false;
+            saVlg.childForceExpandWidth = true;
+            shelvedGo.SetActive(false);
+
+            // Kapat butonu
+            var closeBtn = MakeButton(root.transform, "CloseBtn", "Kapat",
+                new Vector2(0, -290), new Vector2(180, 50));
+
+            // Component
+            var caseBoardUI = root.AddComponent<CaseBoardUI>();
+            caseBoardUI.Setup(root, suspectsContent, cluesContent, mapBtn, mapOverlay, fullImg, mapCloseBtn, closeBtn,
+                suspectsBg, cluesBg, mapBg, emptyBg, noCaseGo, newsBtn, saRt);
+            root.SetActive(false);
+            return caseBoardUI;
+        }
+
+        static GameObject MakeScrollRect(Transform parent, string name, Vector2 anchoredPos, Vector2 size)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = anchoredPos;
+            rt.sizeDelta = size;
+            go.AddComponent<RectMask2D>();
+
+            var contentGo = new GameObject("Content");
+            contentGo.transform.SetParent(go.transform, false);
+            var cRt = contentGo.AddComponent<RectTransform>();
+            cRt.anchorMin = new Vector2(0, 1);
+            cRt.anchorMax = new Vector2(1, 1);
+            cRt.pivot = new Vector2(0.5f, 1f);
+            cRt.anchoredPosition = Vector2.zero;
+            cRt.sizeDelta = new Vector2(0, 0);
+
+            var vlg = contentGo.AddComponent<VerticalLayoutGroup>();
+            vlg.spacing = 6f;
+            vlg.padding = new RectOffset(4, 4, 4, 4);
+            vlg.childControlHeight = true;
+            vlg.childControlWidth = true;
+            vlg.childForceExpandHeight = false;
+            vlg.childForceExpandWidth = true;
+
+            var csf = contentGo.AddComponent<ContentSizeFitter>();
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var scroll = go.AddComponent<ScrollRect>();
+            scroll.content = cRt;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+
+            return go;
+        }
+
+        // ============================================================
         // Helpers — sade panel/text/button
         // ============================================================
         static GameObject MakePanel(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPos, Vector2 size, Color color)

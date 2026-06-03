@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Argos.NPC;
 
@@ -12,5 +13,6 @@ namespace Argos.Scenarios
         public Sprite newspaperSprite;
 
         public NPCData culprit;
+        public List<NPCData> suspects = new List<NPCData>();
     }
 }

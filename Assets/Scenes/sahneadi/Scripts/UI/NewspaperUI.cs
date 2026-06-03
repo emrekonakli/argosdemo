@@ -49,10 +49,34 @@ namespace Argos.UI
                 if (bodyLabel != null) bodyLabel.text = scenario != null
                     ? $"<i>{scenario.scenarioTitle}</i>\n\nMüze'de yaşanan esrarengiz ölüm yetkilileri şaşkına çevirdi. Dedektif Karaca davanın peşinde."
                     : "";
-                if (primaryButtonLabel != null) primaryButtonLabel.text = "DAVAYI ÜSTLEN";
-                if (secondaryButton != null) secondaryButton.gameObject.SetActive(false);
+                bool alreadyAccepted = GameManager.Instance != null && GameManager.Instance.CaseAccepted;
+                if (primaryButtonLabel != null) primaryButtonLabel.text = alreadyAccepted ? "DAVAYI BIRAK" : "DAVAYI ÜSTLEN";
                 if (scoreLabel != null) scoreLabel.text = "";
-                BindPrimary(() => SceneManager.LoadScene(Scenes.Museum));
+                if (alreadyAccepted)
+                {
+                    if (secondaryButton != null) secondaryButton.gameObject.SetActive(true);
+                    if (secondaryButtonLabel != null) secondaryButtonLabel.text = "Çık";
+                    BindPrimary(() =>
+                    {
+                        if (GameManager.Instance != null)
+                        {
+                            GameManager.Instance.ShelveCase();
+                        }
+                        Hide();
+                    });
+                    BindSecondary(() => Hide());
+                }
+                else
+                {
+                    if (secondaryButton != null) secondaryButton.gameObject.SetActive(false);
+                    BindPrimary(() =>
+                    {
+                        if (GameManager.Instance != null) GameManager.Instance.CaseAccepted = true;
+                        Hide();
+                        if (SceneManager.GetActiveScene().name == Scenes.Newspaper)
+                            SceneManager.LoadScene(Scenes.Office);
+                    });
+                }
                 return;
             }
 
@@ -78,9 +102,9 @@ namespace Argos.UI
             BindPrimary(() =>
             {
                 GameManager.Instance?.RestartScenario();
-                SceneManager.LoadScene(Scenes.Museum);
+                SceneManager.LoadScene(Scenes.Office);
             });
-            BindSecondary(() => SceneManager.LoadScene(Scenes.Newspaper));
+            BindSecondary(() => SceneManager.LoadScene(Scenes.Office));
         }
 
         void BindPrimary(System.Action callback)

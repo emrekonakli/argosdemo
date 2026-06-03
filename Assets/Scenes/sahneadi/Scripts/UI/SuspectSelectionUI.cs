@@ -44,12 +44,16 @@ namespace Argos.UI
             for (int i = listParent.childCount - 1; i >= 0; i--)
                 Destroy(listParent.GetChild(i).gameObject);
 
-            // Senaryo'dan culprit dahil tüm şüphelileri otomatik topla; manuel liste boşsa.
             var working = new List<NPCData>(suspects);
             if (working.Count == 0 && GameManager.Instance != null && GameManager.Instance.CurrentScenario != null)
             {
-                if (GameManager.Instance.CurrentScenario.culprit != null)
-                    working.Add(GameManager.Instance.CurrentScenario.culprit);
+                var sc = GameManager.Instance.CurrentScenario;
+                if (sc.suspects != null && sc.suspects.Count > 0)
+                {
+                    working.AddRange(sc.suspects);
+                }
+                if (sc.culprit != null && !working.Contains(sc.culprit))
+                    working.Add(sc.culprit);
             }
 
             if (working.Count == 0)

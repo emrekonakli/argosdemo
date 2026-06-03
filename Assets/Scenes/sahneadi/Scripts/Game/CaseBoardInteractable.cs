@@ -33,7 +33,7 @@ namespace Argos.Game
             if (!playerInRange) return;
             if (UIManager.Instance != null && UIManager.Instance.IsAnyModalOpen) return;
             if (Input.GetKeyDown(KeyCode.E))
-                UIManager.Instance?.OpenSuspectSelection();
+                UIManager.Instance?.OpenCaseBoard();
         }
     }
 }

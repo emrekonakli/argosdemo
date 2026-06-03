@@ -8,15 +8,28 @@ namespace Argos.Player
     {
         [SerializeField] private float moveSpeed = 3f;
 
-        // Yön bazlı sprite'lar. Bootstrap Resources üzerinden default'larını yükler.
         [Header("Directional sprites")]
         public Sprite spriteFront;
         public Sprite spriteBack;
         public Sprite spriteLeft;
         public Sprite spriteRight;
 
+        [Header("Walk animations (sprite arrays)")]
+        public Sprite[] walkRightFrames;
+        public Sprite[] walkLeftFrames;
+        public Sprite[] walkFrontFrames;
+        public Sprite[] walkBackFrames;
+        public Sprite[] walkRightFrontFrames;
+        public Sprite[] walkRightBackFrames;
+        public Sprite[] walkLeftFrontFrames;
+        public Sprite[] walkLeftBackFrames;
+        public float walkFps = 5f;
+
         private Rigidbody2D rb;
         private SpriteRenderer sr;
+        private float animTimer;
+        private int animFrame;
+        private Sprite[] currentAnim;
 
         void Awake()
         {
@@ -26,9 +39,26 @@ namespace Argos.Player
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         }
 
+        void Start()
+        {
+            LoadIfEmpty(ref walkRightFrames, "WalkRight");
+            LoadIfEmpty(ref walkLeftFrames, "WalkLeft");
+            LoadIfEmpty(ref walkFrontFrames, "WalkFront");
+            LoadIfEmpty(ref walkBackFrames, "WalkBack");
+            LoadIfEmpty(ref walkRightFrontFrames, "WalkRightFront");
+            LoadIfEmpty(ref walkRightBackFrames, "WalkRightBack");
+            LoadIfEmpty(ref walkLeftFrontFrames, "WalkLeftFront");
+            LoadIfEmpty(ref walkLeftBackFrames, "WalkLeftBack");
+        }
+
+        void LoadIfEmpty(ref Sprite[] frames, string resourceFolder)
+        {
+            if (frames == null || frames.Length == 0)
+                frames = Resources.LoadAll<Sprite>(resourceFolder);
+        }
+
         void FixedUpdate()
         {
-            // Modal panel açıkken WASD player'ı hareket ettirmesin.
             if (UIManager.Instance != null && UIManager.Instance.IsAnyModalOpen)
             {
                 rb.linearVelocity = Vector2.zero;
@@ -44,18 +74,78 @@ namespace Argos.Player
             UpdateDirectionSprite(x, y);
         }
 
+        void Update()
+        {
+            if (currentAnim == null || currentAnim.Length == 0) return;
+            animTimer += Time.deltaTime;
+            float interval = 1f / walkFps;
+            if (animTimer >= interval)
+            {
+                animTimer -= interval;
+                animFrame = (animFrame + 1) % currentAnim.Length;
+                if (sr != null) sr.sprite = currentAnim[animFrame];
+            }
+        }
+
         void UpdateDirectionSprite(float x, float y)
         {
             if (sr == null) return;
             float ax = Mathf.Abs(x);
             float ay = Mathf.Abs(y);
-            // Hareket yoksa sprite'ı değiştirme (son yön korunsun).
-            if (ax < 0.01f && ay < 0.01f) return;
 
-            Sprite next;
-            if (ax >= ay) next = x > 0f ? spriteRight : spriteLeft;
-            else          next = y > 0f ? spriteBack  : spriteFront;
-            if (next != null && sr.sprite != next) sr.sprite = next;
+            if (ax < 0.01f && ay < 0.01f)
+            {
+                StopAnim();
+                return;
+            }
+
+            bool hasX = ax > 0.01f;
+            bool hasY = ay > 0.01f;
+
+            if (hasX && hasY)
+            {
+                if (x > 0f && y < 0f)      PlayAnim(walkRightFrontFrames, spriteFront);
+                else if (x > 0f && y > 0f)  PlayAnim(walkRightBackFrames, spriteBack);
+                else if (x < 0f && y < 0f)  PlayAnim(walkLeftFrontFrames, spriteFront);
+                else                         PlayAnim(walkLeftBackFrames, spriteBack);
+            }
+            else if (hasX)
+            {
+                if (x > 0f) PlayAnim(walkRightFrames, spriteRight);
+                else         PlayAnim(walkLeftFrames, spriteLeft);
+            }
+            else
+            {
+                if (y > 0f) PlayAnim(walkBackFrames, spriteBack);
+                else         PlayAnim(walkFrontFrames, spriteFront);
+            }
+        }
+
+        void PlayAnim(Sprite[] frames, Sprite fallback)
+        {
+            if (frames != null && frames.Length > 0)
+            {
+                if (currentAnim != frames)
+                {
+                    currentAnim = frames;
+                    animFrame = 0;
+                    animTimer = 0f;
+                    if (sr != null) sr.sprite = frames[0];
+                }
+            }
+            else
+            {
+                StopAnim();
+                if (fallback != null && sr != null && sr.sprite != fallback)
+                    sr.sprite = fallback;
+            }
+        }
+
+        void StopAnim()
+        {
+            currentAnim = null;
+            animFrame = 0;
+            animTimer = 0f;
         }
     }
 }

@@ -18,3 +18,7 @@ MonoBehaviour:
   scenarioDate: "M\xD6 800"
   newspaperSprite: {fileID: 0}
   culprit: {fileID: 11400000, guid: 6c52c44de6a54d64993d9c564f349eae, type: 2}
+  suspects:
+  - {fileID: 11400000, guid: 4e1938d682ad33a4d96ca4235c22f2dd, type: 2}
+  - {fileID: 11400000, guid: 80fa19d6c8d307241bfd69d433025668, type: 2}
+  - {fileID: 11400000, guid: 6c52c44de6a54d64993d9c564f349eae, type: 2}

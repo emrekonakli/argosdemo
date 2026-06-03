@@ -156,7 +156,7 @@ namespace Argos.UI
                     ScoreManager.Instance.LastInterrogationRemainingPatience = remainingPatience;
                 GameManager.PendingNewspaperEnding = true;
                 await Task.Delay(1500);
-                SceneManager.LoadScene(Scenes.Newspaper);
+                SceneManager.LoadScene(Scenes.Office);
                 return;
             }
 
@@ -169,7 +169,7 @@ namespace Argos.UI
                         ScoreManager.Instance.LastInterrogationRemainingPatience = 0;
                     GameManager.PendingNewspaperEnding = true;
                     await Task.Delay(1500);
-                    SceneManager.LoadScene(Scenes.Newspaper);
+                    SceneManager.LoadScene(Scenes.Office);
                     return;
                 }
                 AppendChat("Sistem", "Görüşme sona erdi.");

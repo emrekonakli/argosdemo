@@ -37,6 +37,7 @@ namespace Argos.Game
 
         public void BuildScene()
         {
+            BuildBackground();
             BuildPlaceholderRoom();
             BuildPlayer();
             BuildCamera();
@@ -46,6 +47,18 @@ namespace Argos.Game
             WireUp();
         }
 
+        void BuildBackground()
+        {
+            var sprite = Resources.Load<Sprite>("PortalBackground");
+            if (sprite == null) return;
+
+            var go = new GameObject("PortalBackground");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = -10;
+            go.transform.position = Vector3.zero;
+        }
+
         // ---------------------------------------------------------------
         // Placeholder room (Tilemap yerine koyu renkli sprite duvar/zemin)
         // ---------------------------------------------------------------
@@ -53,39 +66,26 @@ namespace Argos.Game
         {
             var root = new GameObject("PortalRoom");
             float thickness = 0.5f;
-            Color wallColor = new Color(0.18f, 0.18f, 0.22f);
-            Color floorColor = new Color(0.32f, 0.3f, 0.28f);
 
             float w = roomMax.x - roomMin.x;
             float h = roomMax.y - roomMin.y;
             Vector2 center = (roomMin + roomMax) * 0.5f;
 
-            MakeWall(root.transform, "Wall_Top",    new Vector2(center.x, roomMax.y + thickness * 0.5f), new Vector2(w + thickness * 2f, thickness), wallColor);
-            MakeWall(root.transform, "Wall_Bottom", new Vector2(center.x, roomMin.y - thickness * 0.5f), new Vector2(w + thickness * 2f, thickness), wallColor);
-            MakeWall(root.transform, "Wall_Left",   new Vector2(roomMin.x - thickness * 0.5f, center.y), new Vector2(thickness, h), wallColor);
-            MakeWall(root.transform, "Wall_Right",  new Vector2(roomMax.x + thickness * 0.5f, center.y), new Vector2(thickness, h), wallColor);
-
-            var floor = new GameObject("PortalFloor");
-            floor.transform.SetParent(root.transform);
-            var fsr = floor.AddComponent<SpriteRenderer>();
-            fsr.sprite = MakeWhiteSprite();
-            fsr.color = floorColor;
-            fsr.sortingOrder = -10;
-            floor.transform.position = new Vector3(center.x, center.y, 0f);
-            floor.transform.localScale = new Vector3(w, h, 1f);
+            MakeBorder(root.transform, "Wall_Top",    new Vector2(center.x, roomMax.y + thickness * 0.5f), new Vector2(w + thickness * 2f, thickness));
+            MakeBorder(root.transform, "Wall_Bottom", new Vector2(center.x, roomMin.y - thickness * 0.5f), new Vector2(w + thickness * 2f, thickness));
+            MakeBorder(root.transform, "Wall_Left",   new Vector2(roomMin.x - thickness * 0.5f, center.y), new Vector2(thickness, h));
+            MakeBorder(root.transform, "Wall_Right",  new Vector2(roomMax.x + thickness * 0.5f, center.y), new Vector2(thickness, h));
         }
 
-        void MakeWall(Transform parent, string name, Vector2 pos, Vector2 size, Color color)
+        void MakeBorder(Transform parent, string name, Vector2 pos, Vector2 size)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent);
             go.transform.position = new Vector3(pos.x, pos.y, 0f);
             go.transform.localScale = new Vector3(size.x, size.y, 1f);
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = MakeWhiteSprite();
-            sr.color = color;
             go.AddComponent<BoxCollider2D>();
         }
+
 
         // ---------------------------------------------------------------
         // Player — sahne reload sonrası DontDestroyOnLoad'lu Player kalmış olabilir.
@@ -125,6 +125,24 @@ namespace Argos.Game
 
         void BuildCamera()
         {
+            cam = Camera.main;
+            if (cam != null)
+            {
+                cam.transform.position = new Vector3(0f, 0f, -10f);
+                cam.orthographicSize = 5f;
+                cam.backgroundColor = new Color(0.05f, 0.05f, 0.07f);
+                var follow = cam.GetComponent<ArgosCameraFollow>();
+                if (follow != null)
+                {
+                    follow.target = player.transform;
+                    follow.minBounds = roomMin;
+                    follow.maxBounds = roomMax;
+                }
+                if (cam.GetComponent<AudioListener>() == null)
+                    cam.gameObject.AddComponent<AudioListener>();
+                return;
+            }
+
             var camGo = new GameObject("Main Camera");
             camGo.tag = "MainCamera";
             cam = camGo.AddComponent<Camera>();
@@ -132,11 +150,12 @@ namespace Argos.Game
             cam.orthographicSize = 5f;
             cam.backgroundColor = new Color(0.05f, 0.05f, 0.07f);
             cam.transform.position = new Vector3(0f, 0f, -10f);
+            camGo.AddComponent<AudioListener>();
 
-            var follow = camGo.AddComponent<ArgosCameraFollow>();
-            follow.target = player.transform;
-            follow.minBounds = roomMin;
-            follow.maxBounds = roomMax;
+            var newFollow = camGo.AddComponent<ArgosCameraFollow>();
+            newFollow.target = player.transform;
+            newFollow.minBounds = roomMin;
+            newFollow.maxBounds = roomMax;
         }
 
         // ---------------------------------------------------------------
@@ -228,13 +247,8 @@ namespace Argos.Game
         void BuildExitTrigger()
         {
             var go = new GameObject("PortalExit");
-            go.transform.position = new Vector3(roomMax.x - 2f, 0f, 0f);
+            go.transform.position = new Vector3(9.3f, -0.4f, 0f);
             go.transform.localScale = new Vector3(1f, 1f, 1f);
-
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = MakeWhiteSprite();
-            sr.color = new Color(0.85f, 0.15f, 0.15f);
-            sr.sortingOrder = 8;
 
             var col = go.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
@@ -251,13 +265,14 @@ namespace Argos.Game
             if (portalNPC == null) return;
 
             var go = new GameObject("NPC_" + portalNPC.npcName);
-            go.transform.position = new Vector3(0f, -2f, 0f);
+            go.transform.position = new Vector3(-4.12f, -3.02f, 0f);
             go.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
 
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = MakeWhiteSprite();
             sr.color = new Color(0.85f, 0.35f, 0.35f);
             sr.sortingOrder = 10;
+            sr.enabled = false;
 
             var col = go.AddComponent<BoxCollider2D>();
             col.isTrigger = true;

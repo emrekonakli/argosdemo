@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 using Argos.AI;
@@ -40,12 +41,10 @@ namespace Argos.Game
         public Sprite playerSpriteRight;
 
         [Header("Room layout")]
-        // PNG arka plan (1264x848, PPU 63.2) ile yarı boyut: 10 x 6.71.
-        public Vector2 roomMin = new Vector2(-10f, -6.71f);
-        public Vector2 roomMax = new Vector2(10f, 6.71f);
+        // PNG arka plan (1448x1086, PPU 72.4) ile yarı boyut: 10 x 7.5.
+        public Vector2 roomMin = new Vector2(-10f, -7.5f);
+        public Vector2 roomMax = new Vector2(10f, 7.5f);
 
-        [Header("Background")]
-        public Sprite museumBackground;
 
         private GameObject managersRoot;
         private GameObject player;
@@ -61,8 +60,8 @@ namespace Argos.Game
         public void BuildScene()
         {
             BuildManagers();
-            DeactivateOldTilemap();
             BuildBackground();
+            DeactivateOldTilemap();
             if (buildInvisibleBorders) BuildInvisibleBorders();
             if (buildWalls) BuildWalls();
             BuildPlayer();
@@ -70,7 +69,21 @@ namespace Argos.Game
             BuildCanvas();
             WireUp();
             BuildArtifacts();
-            BuildCaseBoard();
+        }
+
+        // ---------------------------------------------------------------
+        // Müze arka plan görseli (Resources/MuseumBackground)
+        // ---------------------------------------------------------------
+        void BuildBackground()
+        {
+            var sprite = Resources.Load<Sprite>("MuseumBackground");
+            if (sprite == null) return;
+
+            var go = new GameObject("MuseumBackground");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = -10;
+            go.transform.position = Vector3.zero;
         }
 
         // ---------------------------------------------------------------
@@ -85,35 +98,17 @@ namespace Argos.Game
         }
 
         // ---------------------------------------------------------------
-        // Arka plan müze sahnesi (PNG, sortingOrder -100, oda merkezinde).
-        // ---------------------------------------------------------------
-        void BuildBackground()
-        {
-            var sprite = museumBackground != null ? museumBackground : Resources.Load<Sprite>("MuseumBackground");
-            if (sprite == null) return;
-
-            var go = new GameObject("MuseumBackground");
-            go.transform.position = Vector3.zero;
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
-            sr.sortingOrder = -100;
-        }
-
-        // ---------------------------------------------------------------
         // Oyuncuyu PNG zemini dışına çıkarmayan görünmez sınır collider'ları.
         // ---------------------------------------------------------------
         void BuildInvisibleBorders()
         {
             var root = new GameObject("InvisibleBorders");
             float thickness = 1f;
-            float w = roomMax.x - roomMin.x;
-            float h = roomMax.y - roomMin.y;
-            Vector2 center = (roomMin + roomMax) * 0.5f;
 
-            MakeBorder(root.transform, "Border_Top",    new Vector2(center.x, roomMax.y + thickness * 0.5f), new Vector2(w + thickness * 2f, thickness));
-            MakeBorder(root.transform, "Border_Bottom", new Vector2(center.x, roomMin.y - thickness * 0.5f), new Vector2(w + thickness * 2f, thickness));
-            MakeBorder(root.transform, "Border_Left",   new Vector2(roomMin.x - thickness * 0.5f, center.y), new Vector2(thickness, h));
-            MakeBorder(root.transform, "Border_Right",  new Vector2(roomMax.x + thickness * 0.5f, center.y), new Vector2(thickness, h));
+            MakeBorder(root.transform, "Border_Top",    new Vector2(0f, 5.6f + thickness),    new Vector2(16.6f, thickness));
+            MakeBorder(root.transform, "Border_Bottom", new Vector2(0f, -5.5f - thickness),   new Vector2(16.6f, thickness));
+            MakeBorder(root.transform, "Border_Left",   new Vector2(-7.8f - thickness, -0.1f), new Vector2(thickness, 12.1f));
+            MakeBorder(root.transform, "Border_Right",  new Vector2(7.8f + thickness, -0.5f),  new Vector2(thickness, 12.1f));
         }
 
         void MakeBorder(Transform parent, string name, Vector2 pos, Vector2 size)
@@ -189,6 +184,18 @@ namespace Argos.Game
             {
                 player = existing;
                 player.transform.position = Vector3.zero;
+                if (player.GetComponent<PlayerGadget>() == null)
+                {
+                    var g = player.AddComponent<PlayerGadget>();
+                    var a = player.GetComponent<AudioSource>();
+                    if (a == null)
+                    {
+                        a = player.AddComponent<AudioSource>();
+                        a.playOnAwake = false;
+                        a.clip = null;
+                    }
+                    g.SetCameraSound(a);
+                }
                 return;
             }
 
@@ -239,6 +246,24 @@ namespace Argos.Game
         // ---------------------------------------------------------------
         void BuildCamera()
         {
+            cam = Camera.main;
+            if (cam != null)
+            {
+                cam.transform.position = new Vector3(0f, 0f, -10f);
+                cam.orthographicSize = 5f;
+                cam.backgroundColor = new Color(0.1f, 0.1f, 0.12f);
+                var follow = cam.GetComponent<ArgosCameraFollow>();
+                if (follow != null)
+                {
+                    follow.target = player.transform;
+                    follow.minBounds = roomMin;
+                    follow.maxBounds = roomMax;
+                }
+                if (cam.GetComponent<AudioListener>() == null)
+                    cam.gameObject.AddComponent<AudioListener>();
+                return;
+            }
+
             var camGo = new GameObject("Main Camera");
             camGo.tag = "MainCamera";
             cam = camGo.AddComponent<Camera>();
@@ -246,11 +271,12 @@ namespace Argos.Game
             cam.orthographicSize = 5f;
             cam.backgroundColor = new Color(0.1f, 0.1f, 0.12f);
             cam.transform.position = new Vector3(0f, 0f, -10f);
+            camGo.AddComponent<AudioListener>();
 
-            var follow = camGo.AddComponent<ArgosCameraFollow>();
-            follow.target = player.transform;
-            follow.minBounds = roomMin;
-            follow.maxBounds = roomMax;
+            var newFollow = camGo.AddComponent<ArgosCameraFollow>();
+            newFollow.target = player.transform;
+            newFollow.minBounds = roomMin;
+            newFollow.maxBounds = roomMax;
         }
 
         // ---------------------------------------------------------------
@@ -279,6 +305,7 @@ namespace Argos.Game
             BuildArtifactInspectPanel(canvasGo.transform);
             BuildJournalPanel(canvasGo.transform);
             BuildJournalButton(canvasGo.transform);
+            BuildOfficeButton(canvasGo.transform);
             BuildInternalVoicePanel(canvasGo.transform);
             UIBuilders.BuildInterrogationPanel(canvasGo.transform);
             UIBuilders.BuildSuspectSelectionPanel(canvasGo.transform);
@@ -576,6 +603,35 @@ namespace Argos.Game
             ltmp.color = Color.white;
         }
 
+        void BuildOfficeButton(Transform parent)
+        {
+            var go = new GameObject("OfficeButton");
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(1f, 0f);
+            rt.anchorMax = new Vector2(1f, 0f);
+            rt.pivot = new Vector2(1f, 0f);
+            rt.anchoredPosition = new Vector2(-20f, 90f);
+            rt.sizeDelta = new Vector2(140f, 60f);
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.55f, 0.4f, 0.25f, 0.9f);
+            var btn = go.AddComponent<Button>();
+            btn.onClick.AddListener(() => SceneManager.LoadScene(Scenes.Office));
+
+            var lblGo = new GameObject("Label");
+            lblGo.transform.SetParent(go.transform, false);
+            var lrt = lblGo.AddComponent<RectTransform>();
+            lrt.anchorMin = Vector2.zero;
+            lrt.anchorMax = Vector2.one;
+            lrt.offsetMin = Vector2.zero;
+            lrt.offsetMax = Vector2.zero;
+            var ltmp = lblGo.AddComponent<TextMeshProUGUI>();
+            ltmp.text = "Ofise Dön";
+            ltmp.fontSize = 20;
+            ltmp.alignment = TextAlignmentOptions.Center;
+            ltmp.color = Color.white;
+        }
+
         // ---------------------------------------------------------------
         // Artifacts
         // ---------------------------------------------------------------
@@ -617,43 +673,6 @@ namespace Argos.Game
                 var interactable = go.AddComponent<ArtifactInteractable>();
                 interactable.data = data;
             }
-        }
-
-        // ---------------------------------------------------------------
-        // Dava Panosu (duvarda dikdörtgen, oyuncu yaklaşınca SuspectSelectionPanel açar)
-        // ---------------------------------------------------------------
-        void BuildCaseBoard()
-        {
-            // PNG'de sağ kapının iç tarafı.
-            var go = new GameObject("CaseBoard");
-            go.transform.position = new Vector3(roomMax.x - 1.2f, -0.89f, 0f);
-            go.transform.localScale = new Vector3(2.2f, 1.4f, 1f);
-
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = MakeWhiteSprite();
-            sr.color = new Color(0.78f, 0.62f, 0.38f);
-            sr.sortingOrder = 4;
-
-            var col = go.AddComponent<BoxCollider2D>();
-            col.isTrigger = true;
-            col.size = new Vector2(1.6f, 2.5f); // yaklaşım alanı genişçe
-
-            go.AddComponent<CaseBoardInteractable>();
-
-            // Üzerine "DAVA" yazısı (TextMesh world space).
-            var labelGo = new GameObject("Label");
-            labelGo.transform.SetParent(go.transform, false);
-            labelGo.transform.localPosition = Vector3.zero;
-            labelGo.transform.localScale = new Vector3(1f / go.transform.localScale.x, 1f / go.transform.localScale.y, 1f);
-            var tm = labelGo.AddComponent<TextMesh>();
-            tm.text = "DAVA";
-            tm.fontSize = 60;
-            tm.characterSize = 0.03f;
-            tm.anchor = TextAnchor.MiddleCenter;
-            tm.alignment = TextAlignment.Center;
-            tm.color = new Color(0.15f, 0.1f, 0.05f);
-            var mr = labelGo.GetComponent<MeshRenderer>();
-            if (mr != null) mr.sortingOrder = 5;
         }
 
         Color ArtifactColor(ArtifactData data)
