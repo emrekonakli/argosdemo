@@ -16,7 +16,8 @@ MonoBehaviour:
   period: "M\xD6 800, Frigya"
   personality: "Ya\u015Fl\u0131, s\xF6z\xFCn\xFC esirgemez ama do\u011Frudan cevap
     vermekten ka\xE7\u0131nan bir k\xE2hin."
-  portrait: {fileID: 0}
+  portrait: {fileID: 5737509497191939921, guid: e380d0e7ecf8e6d43a636c41db269ad6, type: 3}
+  portraitMouthOpen: {fileID: -8855417057224807401, guid: 7a9e6ffc23268f94db932a578f963f01, type: 3}
   knownFacts:
   - "Tun\xE7 Kupa son kez tap\u0131nakta g\xF6r\xFCld\xFC."
   - "Kupa sahibi yabanc\u0131 bir t\xFCccard\u0131."

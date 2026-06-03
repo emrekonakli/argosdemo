@@ -57,6 +57,8 @@ namespace Argos.EditorTools
 
             npc.npcName = "Kâhin Bilge";
             npc.period = "MÖ 800, Frigya";
+            npc.portrait = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/KahinPortrait.png");
+            npc.portraitMouthOpen = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/KahinPortraitOpen.png");
             npc.personality = "Yaşlı, sözünü esirgemez ama doğrudan cevap vermekten kaçınan bir kâhin.";
             npc.knownFacts = new List<string>
             {

@@ -34,7 +34,13 @@ namespace Argos.UI
 
         public bool IsOpen => root != null && root.activeSelf;
 
+        // Konuşma animasyonu ayarları
+        const int CharDelayMs = 22;          // harf başına gecikme (~45 karakter/sn)
+        const int MouthToggleEveryChars = 2; // kaç harfte bir ağız açılıp kapanır
+
         private NPCData currentNpc;
+        private Sprite portraitClosed;
+        private Sprite portraitOpen;
         private bool culpritMode;
         private int remainingPatience;
         private readonly List<ChatMessage> history = new List<ChatMessage>();
@@ -85,9 +91,18 @@ namespace Argos.UI
             remainingPatience = npc.patienceCount;
             waitingForReply = false;
 
+            portraitClosed = npc.portrait;
+            portraitOpen = npc.portraitMouthOpen;
+
             if (root != null) root.SetActive(true);
             if (npcName != null) npcName.text = npc.npcName + (culprit ? " (SUÇLU)" : "");
-            if (npcPortrait != null) npcPortrait.sprite = npc.portrait;
+            if (npcPortrait != null)
+            {
+                npcPortrait.sprite = portraitClosed;
+                npcPortrait.preserveAspect = true;
+                // Sprite varsa placeholder kahverengi tonu kaldır.
+                npcPortrait.color = portraitClosed != null ? Color.white : new Color(0.45f, 0.35f, 0.32f);
+            }
             if (chatHistory != null) chatHistory.text = "";
             if (exitButton != null) exitButton.gameObject.SetActive(true);
             UpdatePatienceLabel();
@@ -145,9 +160,10 @@ namespace Argos.UI
             string reply = AIManager.Instance != null
                 ? await AIManager.Instance.SendChat(BuildSystemPrompt(), history, userMsg)
                 : "...";
-            waitingForReply = false;
 
-            AppendChat(currentNpc != null ? currentNpc.npcName : "NPC", reply);
+            // NPC cevabını harf harf yazarak ve ağız animasyonuyla göster.
+            await RevealNpcReply(currentNpc != null ? currentNpc.npcName : "NPC", reply);
+            waitingForReply = false;
 
             if (culpritMode && reply != null && reply.StartsWith("İTİRAF:"))
             {
@@ -184,6 +200,47 @@ namespace Argos.UI
             history.Add(new ChatMessage { role = speaker, content = line });
             chatBuilder.AppendLine($"<b>{speaker}:</b> {line}");
             if (chatHistory != null) chatHistory.text = chatBuilder.ToString();
+        }
+
+        /// <summary>
+        /// NPC repliğini harf harf yazar; bu sırada ağzı açık/kapalı portreler arasında
+        /// geçiş yaparak konuşuyormuş izlenimi verir. portraitMouthOpen yoksa sadece
+        /// yazma efekti çalışır, portre sabit kalır.
+        /// </summary>
+        async Task RevealNpcReply(string speaker, string line)
+        {
+            if (line == null) line = "";
+            history.Add(new ChatMessage { role = speaker, content = line });
+
+            string basePrefix = chatBuilder.ToString();
+            string head = $"<b>{speaker}:</b> ";
+
+            bool mouthOpen = false;
+            int sinceToggle = 0;
+
+            for (int i = 0; i < line.Length; i++)
+            {
+                if (chatHistory != null)
+                    chatHistory.text = basePrefix + head + line.Substring(0, i + 1);
+
+                // Boşluk dışındaki her birkaç harfte ağzı aç/kapat.
+                if (npcPortrait != null && portraitOpen != null && !char.IsWhiteSpace(line[i]))
+                {
+                    if (++sinceToggle >= MouthToggleEveryChars)
+                    {
+                        sinceToggle = 0;
+                        mouthOpen = !mouthOpen;
+                        npcPortrait.sprite = mouthOpen ? portraitOpen : portraitClosed;
+                    }
+                }
+
+                await Task.Delay(CharDelayMs);
+            }
+
+            // Repliği kalıcı olarak geçmişe yaz ve ağzı kapalı pozisyona getir.
+            chatBuilder.Append(head).Append(line).Append('\n');
+            if (chatHistory != null) chatHistory.text = chatBuilder.ToString();
+            if (npcPortrait != null) npcPortrait.sprite = portraitClosed;
         }
 
         void UpdatePatienceLabel()
