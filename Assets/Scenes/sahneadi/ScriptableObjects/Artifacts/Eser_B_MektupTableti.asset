@@ -19,7 +19,7 @@ MonoBehaviour:
     olabilir."
   artifactPeriod: "M\xD6 1200"
   artifactOrigin: "Bo\u011Fazk\xF6y"
-  artifactSprite: {fileID: 0}
+  artifactSprite: {fileID: -4814914632136034441, guid: 2086b97635dcf534f9fc1737bcab203f, type: 3}
   artifact3DModel: {fileID: 0}
   isEvidenceTarget: 1
   isPortalTrigger: 0

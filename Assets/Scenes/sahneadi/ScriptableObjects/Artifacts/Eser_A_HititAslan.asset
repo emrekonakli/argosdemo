@@ -18,7 +18,7 @@ MonoBehaviour:
     koruyucu sembollerinden. M\xFCzenin envanterinde 1958'den beri kay\u0131tl\u0131."
   artifactPeriod: "M\xD6 1400"
   artifactOrigin: "Alacah\xF6y\xFCk"
-  artifactSprite: {fileID: 0}
+  artifactSprite: {fileID: -5735970479488166001, guid: 8221101ef1356e34b8d317a59d2e4929, type: 3}
   artifact3DModel: {fileID: 0}
   isEvidenceTarget: 0
   isPortalTrigger: 0
