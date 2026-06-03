@@ -49,6 +49,7 @@ namespace Argos.Game
             BuildCamera();
             BuildCanvas();
             BuildExitTrigger();
+            BuildCrimeSceneEntry();
             BuildNPC();
             WireUp();
         }
@@ -261,6 +262,27 @@ namespace Argos.Game
             col.size = new Vector2(2f, 2f);
 
             go.AddComponent<PortalExitTrigger>();
+        }
+
+        // ---------------------------------------------------------------
+        // Olay Yeri (flashback) girişi — oyuncu (-3, 2.5, 0) konumuna gelince
+        // "Olay Yerini İncele [E]" promptu çıkar, E ile OlayYeriScene yüklenir.
+        // ---------------------------------------------------------------
+        void BuildCrimeSceneEntry()
+        {
+            var go = new GameObject("CrimeSceneEntry");
+            go.transform.position = new Vector3(-3f, 2.5f, 0f);
+
+            // Görünmez tetik bölgesi (önceki sarı placeholder + etiket kaldırıldı).
+            // localScale collider'a da uygulandığı için boyut ve trigger alanı
+            // dörtte bire iner (efektif 0.375 * 2 = 0.75 birim).
+            go.transform.localScale = new Vector3(0.375f, 0.375f, 1f);
+
+            var col = go.AddComponent<BoxCollider2D>();
+            col.isTrigger = true;
+            col.size = new Vector2(2f, 2f);
+
+            go.AddComponent<CrimeSceneEntryTrigger>();
         }
 
         // ---------------------------------------------------------------

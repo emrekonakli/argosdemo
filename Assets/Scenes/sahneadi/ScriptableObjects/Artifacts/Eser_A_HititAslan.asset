@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddf88999c270a2649879dea4d235d217, type: 3}
   m_Name: Eser_A_HititAslan
   m_EditorClassIdentifier: Assembly-CSharp::Argos.Artifacts.ArtifactData
-  artifactName: Hitit Aslan Heykeli
+  artifactName: "medusa ba\u015Fl\u0131 kolye"
   artifactDescription: "Bronz ala\u015F\u0131mdan d\xF6k\xFClm\xFC\u015F, taban\u0131nda
     k\xFC\xE7\xFCk bir kaz\u0131ma izi bulunan aslan fig\xFCr\xFC. Hitit d\xF6nemi
     koruyucu sembollerinden. M\xFCzenin envanterinde 1958'den beri kay\u0131tl\u0131."

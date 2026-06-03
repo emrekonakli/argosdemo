@@ -24,7 +24,7 @@ namespace Argos.EditorTools
                 AssetDatabase.CreateAsset(cfg, ConfigAssetPath);
                 cfg.provider = AIProvider.Gemini;
                 cfg.apiKey = "";
-                cfg.modelName = "gemini-2.5-flash";
+                cfg.modelName = "gemini-2.5-flash-lite";
                 cfg.maxTokens = 256;
                 cfg.temperature = 0.7f;
                 EditorUtility.SetDirty(cfg);

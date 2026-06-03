@@ -69,6 +69,23 @@ namespace Argos.Game
             BuildCanvas();
             WireUp();
             BuildArtifacts();
+            BuildOfficeExitTrigger();
+        }
+
+        // ---------------------------------------------------------------
+        // Ofise ışınlanma bölgesi — müzenin alt-orta sınırı. Trigger uzun:
+        // altı -7.5'e (zemin) kadar iner, üstü oyuncunun ulaşabildiği
+        // bölgeye (~-5.0) çıkar. Oyuncu alt sınıra dayanınca tetiklenir.
+        // ---------------------------------------------------------------
+        void BuildOfficeExitTrigger()
+        {
+            var go = new GameObject("OfficeExitTrigger");
+            // Merkez -6.25, yükseklik 2.5 → kutu y ekseninde -7.5 ile -5.0 arası.
+            go.transform.position = new Vector3(0f, -6.25f, 0f);
+            var col = go.AddComponent<BoxCollider2D>();
+            col.isTrigger = true;
+            col.size = new Vector2(0.5f, 2.5f);
+            go.AddComponent<OfficeExitTrigger>();
         }
 
         // ---------------------------------------------------------------
@@ -106,7 +123,8 @@ namespace Argos.Game
             float thickness = 1f;
 
             MakeBorder(root.transform, "Border_Top",    new Vector2(0f, 5.6f + thickness),    new Vector2(16.6f, thickness));
-            MakeBorder(root.transform, "Border_Bottom", new Vector2(0f, -5.5f - thickness),   new Vector2(16.6f, thickness));
+            // Üst yüzü -7.5'te olacak şekilde (merkez -8.0): oyuncu zemine (-7.5) kadar inebilir.
+            MakeBorder(root.transform, "Border_Bottom", new Vector2(0f, -7.5f - thickness * 0.5f), new Vector2(16.6f, thickness));
             MakeBorder(root.transform, "Border_Left",   new Vector2(-7.8f - thickness, -0.1f), new Vector2(thickness, 12.1f));
             MakeBorder(root.transform, "Border_Right",  new Vector2(7.8f + thickness, -0.5f),  new Vector2(thickness, 12.1f));
         }
@@ -639,22 +657,28 @@ namespace Argos.Game
         {
             if (sampleArtifacts == null || sampleArtifacts.Length == 0) return;
 
-            // PNG vitrin koordinatları (PPU=63.2):
-            //  [0] Sol üst (güneş kursu vitrini)    → Eser_A
-            //  [1] Sağ üst (tablet vitrini)          → Eser_B
-            //  [2] Sol alt (aslan heykeli vitrini)   → Eser_C (Halid'in atamasına göre)
+            // Müze vitrin koordinatları (Halid'in atamasına göre):
+            //  [0] Eser_A → "medusa başlı kolye"      → sağ üst
+            //  [1] Eser_B → "hitit güneş kursu"       → sol üst
+            //  [2] Eser_C → "boğazköy tunç tableti"   → sol alt (portal/ışınlanma nesnesi)
             Vector3[] positions =
             {
-                new Vector3(-7.31f,  2.75f, 0f),
-                new Vector3( 7.41f,  2.75f, 0f),
-                new Vector3(-7.31f, -3.58f, 0f),
+                new Vector3( 4.78f,  3.14f, 0f),
+                new Vector3(-4.78f,  3.14f, 0f),
+                new Vector3(-4.78f, -3.14f, 0f),
             };
 
             var root = new GameObject("Artifacts");
+
+            // Eserlerin arkasına konan müze vitrini (Resources/ArtifactDisplayCase).
+            var displayCaseSprite = Resources.Load<Sprite>("ArtifactDisplayCase");
+
             for (int i = 0; i < sampleArtifacts.Length && i < positions.Length; i++)
             {
                 var data = sampleArtifacts[i];
                 if (data == null) continue;
+
+                BuildDisplayCase(root.transform, displayCaseSprite, positions[i]);
 
                 var go = new GameObject("Artifact_" + (string.IsNullOrEmpty(data.artifactName) ? data.name : data.artifactName));
                 go.transform.SetParent(root.transform);
@@ -673,6 +697,26 @@ namespace Argos.Game
                 var interactable = go.AddComponent<ArtifactInteractable>();
                 interactable.data = data;
             }
+        }
+
+        // Eserin arkasına müze vitrini sprite'ı koyar. Vitrin ~3.4 birim
+        // yüksekliğe ölçeklenir; sortingOrder eserin (8) altında, arka planın
+        // (-10) üstünde kalır ki eser vitrinin kadifeli ortasında görünsün.
+        void BuildDisplayCase(Transform parent, Sprite sprite, Vector3 pos)
+        {
+            if (sprite == null) return;
+
+            var go = new GameObject("DisplayCase");
+            go.transform.SetParent(parent);
+            go.transform.position = pos;
+
+            float spriteHeight = sprite.bounds.size.y;       // birim cinsinden (PPU'ya bağlı)
+            float scale = spriteHeight > 0.001f ? 3.4f / spriteHeight : 1f;
+            go.transform.localScale = new Vector3(scale, scale, 1f);
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 5;
         }
 
         Color ArtifactColor(ArtifactData data)

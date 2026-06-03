@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddf88999c270a2649879dea4d235d217, type: 3}
   m_Name: Eser_C_TuncKupa
   m_EditorClassIdentifier: Assembly-CSharp::Argos.Artifacts.ArtifactData
-  artifactName: "Tun\xE7 Kupa"
+  artifactName: "bo\u011Fazk\xF6y tun\xE7 tableti"
   artifactDescription: "A\u011F\u0131z kenar\u0131nda belirgin bir a\u015F\u0131nma
     var. Kupan\u0131n y\xFCzeyinde dinmeyen, hafif bir titreme hissediliyor \u2014
     bilim adamlar\u0131n\u0131n a\xE7\u0131klayamad\u0131\u011F\u0131 bir anomali."

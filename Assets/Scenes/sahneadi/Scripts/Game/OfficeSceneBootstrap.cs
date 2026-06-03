@@ -56,6 +56,7 @@ namespace Argos.Game
             BuildCamera();
             BuildCanvas();
             BuildDoor();
+            BuildMuseumEntryTrigger();
             BuildNewspaper();
             BuildCaseBoard();
             WireUp();
@@ -194,7 +195,7 @@ namespace Argos.Game
             // Kapı çerçevesi
             var door = new GameObject("Door");
             door.transform.position = new Vector3(6.3f, 2.81f, 0f);
-            door.transform.localScale = new Vector3(1.5f, 3f, 1f);
+            door.transform.localScale = new Vector3(0.375f, 0.75f, 1f);
             var doorSr = door.AddComponent<SpriteRenderer>();
             doorSr.sprite = MakeWhiteSprite();
             doorSr.color = new Color(0.35f, 0.22f, 0.12f, 0f);
@@ -219,6 +220,21 @@ namespace Argos.Game
             slotSr.sprite = MakeWhiteSprite();
             slotSr.color = new Color(0.15f, 0.1f, 0.05f, 0f);
             slotSr.sortingOrder = 3;
+        }
+
+        // ---------------------------------------------------------------
+        // Müzeye ışınlanma bölgesi — oyuncu kapı konumuna (6.26, 2.51)
+        // gelince MuseumScene yüklenir. MuseumButton ile aynı kapı, aynı
+        // CaseAccepted koşulu (trigger içinde kontrol edilir).
+        // ---------------------------------------------------------------
+        void BuildMuseumEntryTrigger()
+        {
+            var go = new GameObject("MuseumEntryTrigger");
+            go.transform.position = new Vector3(6.26f, 2.51f, 0f);
+            var col = go.AddComponent<BoxCollider2D>();
+            col.isTrigger = true;
+            col.size = new Vector2(0.375f, 0.375f);
+            go.AddComponent<MuseumEntryTrigger>();
         }
 
         // ---------------------------------------------------------------

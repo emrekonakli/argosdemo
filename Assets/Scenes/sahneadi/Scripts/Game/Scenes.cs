@@ -6,5 +6,6 @@ namespace Argos.Game
         public const string Portal = "PortalScene";
         public const string Newspaper = "NewspaperScene";
         public const string Office = "OfficeScene";
+        public const string CrimeScene = "OlayYeriScene";
     }
 }

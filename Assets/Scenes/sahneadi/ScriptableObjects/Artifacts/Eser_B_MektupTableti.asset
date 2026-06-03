@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddf88999c270a2649879dea4d235d217, type: 3}
   m_Name: Eser_B_MektupTableti
   m_EditorClassIdentifier: Assembly-CSharp::Argos.Artifacts.ArtifactData
-  artifactName: Antik Mektup Tableti
+  artifactName: "hitit g\xFCne\u015F kursu"
   artifactDescription: "\xC7ivi yaz\u0131s\u0131yla yaz\u0131lm\u0131\u015F bir mektup
     par\xE7as\u0131. Kenar\u0131 k\u0131r\u0131k, ama m\xFCh\xFCr izi h\xE2l\xE2
     okunabiliyor. \xDCzerinde belirgin bir kan lekesi var \u2014 son sahibinden kalm\u0131\u015F
