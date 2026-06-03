@@ -105,3 +105,7 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# ARGOS — AI API key içeren config; gizli kalmalı (lokal testte key Inspector'dan girilir).
+# .meta dosyası izli kalır (GUID korunur), sadece .asset yok sayılır.
+/Assets/Scenes/sahneadi/ScriptableObjects/AIConfig.asset

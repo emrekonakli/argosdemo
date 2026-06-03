@@ -5,7 +5,8 @@ namespace Argos.AI
     public enum AIProvider
     {
         OpenAI,
-        Anthropic
+        Anthropic,
+        Gemini
     }
 
     [CreateAssetMenu(fileName = "AIConfig", menuName = "ARGOS/AI Config", order = 3)]

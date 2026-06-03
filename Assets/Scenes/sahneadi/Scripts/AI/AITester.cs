@@ -11,7 +11,7 @@ namespace Argos.AI
     public class AITester : MonoBehaviour
     {
         [SerializeField] private KeyCode triggerKey = KeyCode.F;
-        [TextArea(2, 5)] public string systemPrompt = "Sen yaşlı bir Frigya kâhinisin. Kısa, gizemli cümleler kurarsın.";
+        [TextArea(2, 5)] public string systemPrompt = "Sen MÖ 800 Frigya'sında yaşayan, korkmuş yoksul bir köy çocuğusun. Kısa, çocuksu cümleler kurarsın.";
         public string userMessage = "Bana ne söyleyebilirsin?";
 
         async void Update()

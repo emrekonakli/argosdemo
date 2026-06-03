@@ -14,6 +14,7 @@ namespace Argos.EditorTools
         const string PortalScenePath = "Assets/Scenes/sahneadi/Scenes/PortalScene.unity";
         const string NpcFolder = "Assets/Scenes/sahneadi/ScriptableObjects/NPCs";
         const string PortalNpcPath = NpcFolder + "/NPC_KahinBilge.asset";
+        const string AIConfigPath = "Assets/Scenes/sahneadi/ScriptableObjects/AIConfig.asset";
 
         [MenuItem("ARGOS/Build Portal Scene")]
         public static void Build()
@@ -33,6 +34,7 @@ namespace Argos.EditorTools
             var bootstrap = bootstrapGo.AddComponent<PortalSceneBootstrap>();
             bootstrap.buildOnStart = true;
             bootstrap.portalNPC = npc;
+            bootstrap.aiConfig = AssetDatabase.LoadAssetAtPath<Argos.AI.AIConfig>(AIConfigPath);
 
             EditorSceneManager.MarkSceneDirty(newScene);
             EditorSceneManager.SaveScene(newScene, PortalScenePath);
@@ -55,23 +57,30 @@ namespace Argos.EditorTools
                 AssetDatabase.CreateAsset(npc, PortalNpcPath);
             }
 
-            npc.npcName = "Kâhin Bilge";
+            npc.npcName = "Köylü Çocuk";
             npc.period = "MÖ 800, Frigya";
             npc.portrait = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/KahinPortrait.png");
             npc.portraitMouthOpen = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/KahinPortraitOpen.png");
-            npc.personality = "Yaşlı, sözünü esirgemez ama doğrudan cevap vermekten kaçınan bir kâhin.";
+            npc.personality = "MÖ 800 Frigya'sında yaşayan, yırtık giysili, yoksul bir köy çocuğu. Korkmuş ve "
+                + "çekingendir. Bir gece köyün yakınındaki yolda bir tüccarın at arabasının pusuya düşürülüp "
+                + "devrildiğine şahit oldu ve o günden beri dehşet içinde. Çocuksu, kısa ve sade cümlelerle konuşur, "
+                + "bazen kekeler. Gördüklerini anlatmaya korkar çünkü saldırganın kendisine zarar vermesinden çekinir; "
+                + "güven kazanılırsa yavaş yavaş açılır. Soylulardan, büyüklerin işlerinden ve tapınaktan ürker. "
+                + "Asla yalan uydurmaz; korktuğunda susar ya da 'bilmiyorum' der. Dönemine ait olmayan (modern) "
+                + "şeyleri anlamaz.";
             npc.knownFacts = new List<string>
             {
-                "Tunç Kupa son kez tapınakta görüldü.",
-                "Kupa sahibi yabancı bir tüccardı.",
-                "O gece tapınakta üç kişi vardı.",
+                "O gece köyün yakınındaki yolda bir at arabasının devrildiğini gördüm.",
+                "Arabanın atları ürkmüş, çığlık çığlığa her yere kaçışıyordu.",
+                "Arabadaki yaşlı adam yere yığılmıştı, hiç kıpırdamıyordu.",
             };
             npc.hiddenFacts = new List<string>
             {
-                "Tüccarın oğlu cinayet anında oradaydı.",
-                "Kupanın kenarındaki kan tüccara aitti.",
+                "Devrilen arabanın yanında soylu giysili genç bir adam vardı.",
+                "O genç adam arabadan bir şey alıp tapınağa doğru koştu.",
+                "Çok korktuğum için bugüne dek kimseye anlatmadım.",
             };
-            npc.mandatoryFinalFact = "Tüccarın oğlu, babasını kupayla zehirledi.";
+            npc.mandatoryFinalFact = "O genç adamı tanıdım; tüccarın oğluydu. Babasının arabasını yolda devirip onu orada ölüme terk etti.";
             npc.patienceCount = 6;
             EditorUtility.SetDirty(npc);
             return npc;

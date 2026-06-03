@@ -51,6 +51,7 @@ namespace Argos.AI
                 {
                     AIProvider.OpenAI => await SendOpenAI(systemPrompt, history, userMessage),
                     AIProvider.Anthropic => await SendAnthropic(systemPrompt, history, userMessage),
+                    AIProvider.Gemini => await SendGemini(systemPrompt, history, userMessage),
                     _ => FallbackOrEllipsis(),
                 };
             }
@@ -148,6 +149,69 @@ namespace Argos.AI
         }
         [Serializable] class AntBlock { public string type; public string text; }
         [Serializable] class AntResponse { public AntBlock[] content; }
+
+        // ---------------------------------------------------------------
+        // Gemini (Google Generative Language API)
+        // ---------------------------------------------------------------
+        async Task<string> SendGemini(string systemPrompt, List<ChatMessage> history, string userMessage)
+        {
+            var contents = new List<GemContent>();
+            foreach (var h in history)
+                contents.Add(new GemContent
+                {
+                    role = h.role == "Sen" ? "user" : "model",
+                    parts = new[] { new GemPart { text = h.content } },
+                });
+            contents.Add(new GemContent { role = "user", parts = new[] { new GemPart { text = userMessage } } });
+
+            var body = new GemRequest
+            {
+                systemInstruction = new GemSystem { parts = new[] { new GemPart { text = systemPrompt } } },
+                contents = contents.ToArray(),
+                generationConfig = new GemGenConfig
+                {
+                    temperature = config.temperature,
+                    maxOutputTokens = config.maxTokens,
+                    // Gemini 2.5+ "düşünen" modeller token bütçesini iç akıl yürütmeye harcayıp
+                    // cevabı kısaltabiliyor. thinkingBudget=0 ile düşünmeyi kapatıp tüm bütçeyi
+                    // gerçek yanıta bırakıyoruz (daha hızlı, daha ucuz, kesilmeyen cevap).
+                    thinkingConfig = new GemThinkingConfig { thinkingBudget = 0 },
+                },
+            };
+            string json = JsonUtility.ToJson(body);
+            // API key'i header ile gönderiyoruz (URL'ye koymuyoruz → log sızıntısı yok).
+            string url = $"https://generativelanguage.googleapis.com/v1beta/models/{config.modelName}:generateContent";
+            string raw = await PostJson(url, json, ("x-goog-api-key", config.apiKey));
+
+            var resp = JsonUtility.FromJson<GemResponse>(raw);
+            if (resp?.candidates == null || resp.candidates.Length == 0
+                || resp.candidates[0].content?.parts == null || resp.candidates[0].content.parts.Length == 0)
+                throw new Exception("Gemini yanıtı boş.");
+
+            var sb = new StringBuilder();
+            foreach (var part in resp.candidates[0].content.parts)
+                if (part != null && !string.IsNullOrEmpty(part.text)) sb.Append(part.text);
+            return sb.ToString();
+        }
+
+        [Serializable] class GemPart { public string text; }
+        [Serializable] class GemContent { public string role; public GemPart[] parts; }
+        [Serializable] class GemSystem { public GemPart[] parts; }
+        [Serializable] class GemThinkingConfig { public int thinkingBudget; }
+        [Serializable] class GemGenConfig
+        {
+            public float temperature;
+            public int maxOutputTokens;
+            public GemThinkingConfig thinkingConfig;
+        }
+        [Serializable] class GemRequest
+        {
+            public GemSystem systemInstruction;
+            public GemContent[] contents;
+            public GemGenConfig generationConfig;
+        }
+        [Serializable] class GemCandidate { public GemContent content; }
+        [Serializable] class GemResponse { public GemCandidate[] candidates; }
 
         // ---------------------------------------------------------------
         // UnityWebRequest POST helper

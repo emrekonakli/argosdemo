@@ -12,18 +12,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 780141969ced0fd4aa7b770acf32f95c, type: 3}
   m_Name: NPC_KahinBilge
   m_EditorClassIdentifier: Assembly-CSharp::Argos.NPC.NPCData
-  npcName: "K\xE2hin Bilge"
+  npcName: "K\xF6yl\xFC \xC7ocuk"
   period: "M\xD6 800, Frigya"
-  personality: "Ya\u015Fl\u0131, s\xF6z\xFCn\xFC esirgemez ama do\u011Frudan cevap
-    vermekten ka\xE7\u0131nan bir k\xE2hin."
+  personality: "M\xD6 800 Frigya's\u0131nda ya\u015Fayan, y\u0131rt\u0131k giysili,
+    yoksul bir k\xF6y \xE7ocu\u011Fu. Korkmu\u015F ve \xE7ekingendir. Bir gece k\xF6y\xFCn
+    yak\u0131n\u0131ndaki yolda bir t\xFCccar\u0131n at arabas\u0131n\u0131n pusuya
+    d\xFC\u015F\xFCr\xFCl\xFCp devrildi\u011Fine \u015Fahit oldu ve o g\xFCnden beri
+    deh\u015Fet i\xE7inde. \xC7ocuksu, k\u0131sa ve sade c\xFCmlelerle konu\u015Fur,
+    bazen kekeler. G\xF6rd\xFCklerini anlatmaya korkar \xE7\xFCnk\xFC sald\u0131rgan\u0131n
+    kendisine zarar vermesinden \xE7ekinir; g\xFCven kazan\u0131l\u0131rsa yava\u015F
+    yava\u015F a\xE7\u0131l\u0131r. Soylulardan, b\xFCy\xFCklerin i\u015Flerinden
+    ve tap\u0131naktan \xFCrker. Asla yalan uydurmaz; korktu\u011Funda susar ya da
+    'bilmiyorum' der. D\xF6nemine ait olmayan (modern) \u015Feyleri anlamaz."
   portrait: {fileID: 5737509497191939921, guid: e380d0e7ecf8e6d43a636c41db269ad6, type: 3}
   portraitMouthOpen: {fileID: -8855417057224807401, guid: 7a9e6ffc23268f94db932a578f963f01, type: 3}
   knownFacts:
-  - "Tun\xE7 Kupa son kez tap\u0131nakta g\xF6r\xFCld\xFC."
-  - "Kupa sahibi yabanc\u0131 bir t\xFCccard\u0131."
-  - "O gece tap\u0131nakta \xFC\xE7 ki\u015Fi vard\u0131."
+  - "O gece k\xF6y\xFCn yak\u0131n\u0131ndaki yolda bir at arabas\u0131n\u0131n devrildi\u011Fini
+    g\xF6rd\xFCm."
+  - "Araban\u0131n atlar\u0131 \xFCrkm\xFC\u015F, \xE7\u0131\u011Fl\u0131k \xE7\u0131\u011Fl\u0131\u011Fa
+    her yere ka\xE7\u0131\u015F\u0131yordu."
+  - "Arabadaki ya\u015Fl\u0131 adam yere y\u0131\u011F\u0131lm\u0131\u015Ft\u0131,
+    hi\xE7 k\u0131p\u0131rdam\u0131yordu."
   hiddenFacts:
-  - "T\xFCccar\u0131n o\u011Flu cinayet an\u0131nda oradayd\u0131."
-  - "Kupan\u0131n kenar\u0131ndaki kan t\xFCccara aitti."
-  mandatoryFinalFact: "T\xFCccar\u0131n o\u011Flu, babas\u0131n\u0131 kupayla zehirledi."
+  - "Devrilen araban\u0131n yan\u0131nda soylu giysili gen\xE7 bir adam vard\u0131."
+  - "O gen\xE7 adam arabadan bir \u015Fey al\u0131p tap\u0131na\u011Fa do\u011Fru
+    ko\u015Ftu."
+  - "\xC7ok korktu\u011Fum i\xE7in bug\xFCne dek kimseye anlatmad\u0131m."
+  mandatoryFinalFact: "O gen\xE7 adam\u0131 tan\u0131d\u0131m; t\xFCccar\u0131n o\u011Fluydu.
+    Babas\u0131n\u0131n arabas\u0131n\u0131 yolda devirip onu orada \xF6l\xFCme terk
+    etti."
   patienceCount: 6

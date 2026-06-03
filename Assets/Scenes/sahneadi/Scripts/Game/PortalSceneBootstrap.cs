@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
+using Argos.AI;
 using Argos.NPC;
 using Argos.Player;
 using Argos.Portal;
@@ -20,6 +21,7 @@ namespace Argos.Game
 
         [Header("Optional refs")]
         public NPCData portalNPC;
+        public AIConfig aiConfig;
 
         [Header("Room layout")]
         public Vector2 roomMin = new Vector2(-10f, -7.5f);
@@ -37,6 +39,10 @@ namespace Argos.Game
 
         public void BuildScene()
         {
+            // Portal sahnesi doğrudan oynatılırsa AIManager'a config'i burada bağla
+            // (normalde Müze'den DDOL ile taşınır).
+            if (aiConfig != null && AIManager.Instance != null) AIManager.Instance.SetConfig(aiConfig);
+
             BuildBackground();
             BuildPlaceholderRoom();
             BuildPlayer();

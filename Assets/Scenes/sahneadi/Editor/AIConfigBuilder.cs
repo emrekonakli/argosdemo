@@ -22,9 +22,9 @@ namespace Argos.EditorTools
             {
                 cfg = ScriptableObject.CreateInstance<AIConfig>();
                 AssetDatabase.CreateAsset(cfg, ConfigAssetPath);
-                cfg.provider = AIProvider.OpenAI;
+                cfg.provider = AIProvider.Gemini;
                 cfg.apiKey = "";
-                cfg.modelName = "gpt-4o-mini";
+                cfg.modelName = "gemini-2.5-flash";
                 cfg.maxTokens = 256;
                 cfg.temperature = 0.7f;
                 EditorUtility.SetDirty(cfg);
